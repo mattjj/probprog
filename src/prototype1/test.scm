@@ -2,7 +2,7 @@
 
 (define (dumb)
   (let ((x (gaussian 0 1)))
-    (emit x 1 (likelihood:additive-gaussian 0 5))
+    (emit x 1 (likelihood:additive-gaussian 0 0.1))
     x))
 
 ;; try running with
