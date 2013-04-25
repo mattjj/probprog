@@ -10,26 +10,26 @@
    (lambda (form uenv)
      `(pramb-list
        (list ,@(map (lambda (arg)
-		      `(lambda ()
-			 ,(close-syntax arg uenv)))
-		    (cdr form)))))))
-
+              `(lambda ()
+             ,(close-syntax arg uenv)))
+            (cdr form)))))))
 
 ;; choice points
 ;; choice-points is a list of choice points
-;; a choice point is a list of thunks
-(define *choice-points* (empty-choice-points))
+;; a choice point is a list of thunks, each of which is an alternative future
+;; based on the arguments passed to pramb
 (define (empty-choice-points) '())
+(define *choice-points* (empty-choice-points))
 (define (add-to-choice-points xs) (cons xs *choice-points*))
 
 
 ;; interface
-;; functions: 
-;;    sample <probabilistic function> <number of samples> --> <list of tuples (choices)> 
+;; functions:
+;;    sample <probabilistic function> <number of samples> --> <list of tuples (choices)>
 
 (define (pramb-list alternatives)
   (if (null? alternatives)
-      (error "pramb-list: Why are there no alternatives?"))
+      (error "pramb-list: Why are there no alternatives? You suck!"))
   (call-with-current-continuation
    (lambda (k)
      (add-to-choice-points
@@ -38,6 +38,13 @@
                (within-continuation k alternative)))
            alternatives))
      (yield))))
+
+
+(define (yield)
+  (if (empty? *choice-points*)
+      (*top-level* #f)
+      ((uniform-choose (car *choice-points*))))
+
 
 (define (with-uniform-mh-sampler thunk)
   (call-with-current-continuation
@@ -48,19 +55,12 @@
        (thunk)))))
 
 
-
-
 ;;; Representation of the search schedule
 
 (define *search-schedule*)
 
 (define (empty-search-schedule)
   (make-stack&queue))
-
-(define (yield)
-  (if (-empty? *choice-points*)
-      (*top-level* #f)
-      ((uniform-choose (car *choice-points*))))
 
 (define (force-next thunk)
   (push! *search-schedule* thunk))
