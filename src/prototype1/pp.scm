@@ -142,3 +142,12 @@
         (+ iter 1))
       (/ count nsamples))))
 
+(define (estimate-mean thunk nsamples)
+  (let lp ((tot 0)
+           (iter 0))
+    (if (< iter nsamples)
+      (lp
+        (+ tot (thunk))
+        (+ iter 1))
+      (/ tot nsamples))))
+
