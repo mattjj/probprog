@@ -16,11 +16,12 @@
 (define (ptrace:length ptrace)
   (length (ptrace:choices ptrace)))
 
-;; NOTE indexing UP, most recent is 0
-(define (ptrace:starting-before-choice-index ptrace index)
-  (ptrace:new
-    (list-tail (ptrace:choices ptrace) (+ 1 index))
-    (list-tail (ptrace:prior-scores ptrace) (+ 1 index))))
+;; up to and NOT including index
+(define (ptrace:head ptrace index)
+  (let ((oldlen (ptrace:length ptrace)))
+    (ptrace:new
+        (list-tail (ptrace:choices ptrace) (- oldlen index))
+        (list-tail (ptrace:prior-scores ptrace) (- oldlen index)))))
 
 (define (ptrace:add-choice! choice)
   (ptrace:set-choices! *current-ptrace* (cons choice (ptrace:choices *current-ptrace*))))

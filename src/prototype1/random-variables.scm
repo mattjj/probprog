@@ -11,16 +11,17 @@
           (v (random 1.0))
           (std (sqrt var)))
       (+ mean
-        (* std
+         (* std
             (sqrt (- (* 2 (log u))))
             (cos (* 2 pi v)))))))
 
 (define (gaussian:likelihood val params)
   (let ((mean (car params))
         (var (cadr params)))
-    (let ((centered (- val mean)))
-      (/ (exp (- (/ (* centered centered) var)))
-         (sqrt (* 2 pi var))))))
+    (let* ((std (sqrt var))
+           (standardized (/ (- val mean) std)))
+      (/ (exp (- (/ (* standardized standardized) 2)))
+         (* std (sqrt (* 2 pi)))))))
 
 #| DISCRETE/CATEGORICAL |#
 

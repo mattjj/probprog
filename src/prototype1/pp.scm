@@ -4,7 +4,9 @@
 ;; TODO use log probabilities
 ;; TODO use flo operations for speed (prevent boxing/unboxing)
 ;; TODO undoable effects
-;; TODO things break if no emit is called? bug or feature?
+;; TODO things break if no emit is called?
+;; TODO dynamic context
+;; TESTS
 
 (load "pp-records.scm")
 (load "random-variables.scm")
@@ -27,26 +29,6 @@
 
 #| SAMPLING FUNCTIONS |#
 
-(define (sample name sampler scorer parameters proposer)
-  (if (default-object? proposer)
-    (set! proposer (prior-proposer sampler scorer parameters)))
-  (let ((val (call-with-current-continuation
-               (lambda (k)
-                 (let ((val (sampler parameters)))
-                   (ptrace:add-choice! (choice:new name parameters proposer val k))
-                   val)))))
-    (ptrace:add-prior-score! (scorer val parameters))
-    val))
-
-(define ((prior-proposer sampler scorer parameters) choice)
-  (let ((new-val (sampler parameters))
-        (old-val (choice:val choice)))
-    (let ((forward-score (scorer new-val parameters))
-          (backward-score (scorer new-val parameters)))
-      (set! *forward-score* forward-score)   ;; forward means alternative -> current
-      (set! *backward-score* backward-score) ;; backward means current -> alternative
-      new-val)))
-
 (define (discrete weighted-list #!optional proposer)
   (sample
     'discrete
@@ -66,9 +48,32 @@
     (list mean var)
     proposer))
 
+(define (sample name sampler scorer parameters proposer)
+  (if (default-object? proposer)
+    (set! proposer (prior-proposer sampler scorer parameters)))
+  (let ((val (call-with-current-continuation
+               (lambda (k)
+                 (let ((val (sampler parameters)))
+                   (ptrace:add-choice! (choice:new name parameters proposer val k))
+                   val)))))
+    (ptrace:add-prior-score! (scorer val parameters))
+    val))
+
+(define ((prior-proposer sampler scorer parameters) choice)
+  (let ((new-val (sampler parameters))
+        (old-val (choice:val choice)))
+    (let ((forward-score (scorer new-val parameters))
+          (backward-score (scorer old-val parameters)))
+      (set! *forward-score* forward-score)   ;; forward means alternative -> current
+      (set! *backward-score* backward-score) ;; backward means current -> alternative
+      new-val)))
+
 #| MH over traces |#
 
-(define (emit var observed-value likelihood-function)
+(define (emit var observed-value #!optional likelihood-function)
+  (if (default-object? likelihood-function)
+    (set! likelihood-function likelihood:exact))
+
   (ptrace:set-likelihood-score! *current-ptrace* (likelihood-function var observed-value))
   (call-with-current-continuation
     (lambda (k)
@@ -94,12 +99,20 @@
                              (/ current-likelihood alternative-likelihood)
                              (/ backward-choice-prob forward-choice-prob)
                              (/ *backward-score* *forward-score*))))
+                    ;; (pp "current")
+                    ;; (pp *current-ptrace*)
+                    ;; (newline)
+                    ;; (pp "alternative")
+                    ;; (pp *alternative-ptrace*)
+                    ;; (newline)
+                    ;; (pp "acceptance ratio")
+                    ;; (pp accept-current-probability)
                     (if (< (random 1.0) accept-current-probability)
                       *current-ptrace*
                       *alternative-ptrace*)))))))
 
 (define (prior-score ptrace)
-  (list-ref (reverse (ptrace:prior-scores ptrace)) (- *common-ptrace-prefix-length* 1)))
+  (list-ref (reverse (ptrace:prior-scores ptrace)) *common-ptrace-prefix-length*))
 
 (define (choose-ptrace ptrace)
   (set! *current-ptrace* ptrace)
@@ -109,10 +122,10 @@
   (set! *niter* (- *niter* 1))
   (set! *alternative-ptrace* *current-ptrace*)
   (let* ((proposal-index (random (ptrace:length *current-ptrace*)))
-         (choice (list-ref (ptrace:choices *current-ptrace*) proposal-index))
-         (new-ptrace (ptrace:starting-before-choice-index *current-ptrace* proposal-index))
+         (new-ptrace (ptrace:head *current-ptrace* proposal-index))
+         (choice (list-ref (reverse (ptrace:choices *current-ptrace*)) proposal-index))
          (k (choice:continuation choice)))
-    (set! *common-ptrace-prefix-length* (- (ptrace:length *current-ptrace*) proposal-index))
+    (set! *common-ptrace-prefix-length* (ptrace:length new-ptrace))
     (set! *current-ptrace* new-ptrace)
     (within-continuation k (lambda () (propose choice)))))
 
