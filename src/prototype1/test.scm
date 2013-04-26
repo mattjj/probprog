@@ -18,3 +18,8 @@
             likelihood:exact)
       (= sum 0))))
 
+(define (dumb3)
+  (let ((x (gaussian 0 1)))
+    (emit x 1 (likelihood:additive-gaussian 0 0.1))
+    (< x 0.5)))
+
