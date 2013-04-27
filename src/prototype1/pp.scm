@@ -7,17 +7,20 @@
 ;; Globals and initialization ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define NUM-MH-STEPS 100)
+(define DEFAULT-MH-STEPS 100)
 
-(define *niter*)
+(define *niter-left*)
 (define *current-ptrace*)
 (define *alternative-ptrace*)
 (define *forward-score*)
 (define *backward-score*)
 (define *common-ptrace-prefix-length*)
+(define *top-level* #f) ;; should only be rebound dynamically (i.e. should stay #f in global scope)
+(define *niter-done* 0) ;; only interesting with resuming runs
 
 (define (reset)
-  (set! *niter* NUM-MH-STEPS)
+  (set! *niter-left* DEFAULT-MH-STEPS)
+  (set! *niter-done* 0)
   (set! *current-ptrace* (ptrace:new '() '()))
   (set! *alternative-ptrace* #f))
 (reset)
@@ -60,15 +63,17 @@
     (lambda (k)
       (ptrace:set-emit-continuation! *current-ptrace* k)
       (choose-ptrace (MH-sample-ptrace))))
-  (if (> *niter* 0)
+  (set! *niter-done* (+ *niter-done* 1))
+  (if (> *niter-left* 0)
     (try-another)
-    (reset)))
+    (if (not *top-level*)
+      (reset))))
 
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
     *current-ptrace*
-    (let ((forward-choice-prob (flo:negate (log (ptrace:length *alternative-ptrace*))))
-          (backward-choice-prob (flo:negate (log (ptrace:length *current-ptrace*))))
+    (let ((forward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *alternative-ptrace*)))))
+          (backward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *current-ptrace*)))))
           (current-prior (prior-score *current-ptrace*))
           (alternative-prior (prior-score *alternative-ptrace*))
           (current-likelihood (ptrace:likelihood-score *current-ptrace*))
@@ -89,10 +94,10 @@
 
 (define (choose-ptrace ptrace)
   (set! *current-ptrace* ptrace)
-  ((ptrace:emit-continuation ptrace) #!unspecific))
+  (within-continuation (ptrace:emit-continuation ptrace) (lambda () #!unspecific)))
 
 (define (try-another)
-  (set! *niter* (- *niter* 1))
+  (set! *niter-left* (- *niter-left* 1))
   (set! *alternative-ptrace* *current-ptrace*)
   (let* ((proposal-index (random (ptrace:length *current-ptrace*)))
          (new-ptrace (ptrace:head *current-ptrace* proposal-index))
@@ -108,4 +113,29 @@
     (choice:set-val! new-choice new-val)
     (ptrace:add-choice! new-choice)
     new-val))
+
+;;;;;;;;;;;;;;;;;;;;
+;; Resumable runs ;;
+;;;;;;;;;;;;;;;;;;;;
+
+(define (run thunk niter)
+  (fluid-let ((*niter-left* niter)
+              (*current-ptrace* (ptrace:new '() '()))
+              (*alternative-ptrace* #f)
+              (*backward-score* #f)
+              (*forward-score* #f)
+              (*backward-score* #f)
+              (*common-ptrace-prefix-length* #f))
+
+             (call-with-current-continuation
+               (lambda (k)
+                 (fluid-let ((*top-level* k))
+                            (*top-level* (thunk)))))))
+
+(define (resume thunk niter)
+  (call-with-current-continuation
+    (lambda (k)
+      (within-continuation
+        (ptrace:emit-continuation (eq-get thunk 'last-ptrace))
+        (lambda () (set! *niter-left* niter) (set! *top-level* k) #!unspecific)))))
 
