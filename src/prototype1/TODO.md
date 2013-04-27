@@ -1,5 +1,6 @@
 # definitely #
 * more tests!
+* try compiling
 * undoable effects
 * compute with log probabilities
 * use flo operations for speed to prevent boxing/unboxing to the heap
