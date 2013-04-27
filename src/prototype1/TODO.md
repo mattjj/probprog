@@ -1,6 +1,7 @@
 # definitely #
 * undoable effects
 * save the number of accepts and rejects
+* instead of allocating new ptrace memory, just keep two
 
 # maybe #
 * make pramb a macro like amb so it doesn't evaluate its arguments?

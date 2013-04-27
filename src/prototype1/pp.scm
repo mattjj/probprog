@@ -2,6 +2,7 @@
 
 (load "pp-records")
 (load "constants")
+(load "eq-properties")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Globals and initialization ;;
@@ -16,11 +17,10 @@
 (define *backward-score*)
 (define *common-ptrace-prefix-length*)
 (define *top-level* #f) ;; should only be rebound dynamically (i.e. should stay #f in global scope)
-(define *niter-done* 0) ;; only interesting with resuming runs
+(define *niter-done* 0) ;; only interesting when resuming runs
 
 (define (reset)
   (set! *niter-left* DEFAULT-MH-STEPS)
-  (set! *niter-done* 0)
   (set! *current-ptrace* (ptrace:new '() '()))
   (set! *alternative-ptrace* #f))
 (reset)
@@ -120,6 +120,7 @@
 
 (define (run thunk niter)
   (fluid-let ((*niter-left* niter)
+              (*niter-done* 0)
               (*current-ptrace* (ptrace:new '() '()))
               (*alternative-ptrace* #f)
               (*backward-score* #f)
@@ -130,7 +131,10 @@
              (call-with-current-continuation
                (lambda (k)
                  (fluid-let ((*top-level* k))
-                            (*top-level* (thunk)))))))
+                            (let ((val (thunk)))
+                              (eq-put! thunk 'last-ptrace *current-ptrace*)
+                              (eq-put! thunk 'total-iterations *niter-done*)
+                              (*top-level* (thunk))))))))
 
 (define (resume thunk niter)
   (call-with-current-continuation
