@@ -6,7 +6,7 @@
 
 (define (gaussian:rvs params)
   (let ((mean (car params))
-        (var (cadr params)))
+        (var (cdr params)))
     (let ((u (random 1.0))
           (v (random 1.0))
           (std (sqrt var)))
@@ -17,7 +17,7 @@
 
 (define (gaussian:likelihood val params)
   (let ((mean (car params))
-        (var (cadr params)))
+        (var (cdr params)))
     (let* ((std (sqrt var))
            (standardized (/ (- val mean) std)))
       (/ (exp (- (/ (* standardized standardized) 2)))
@@ -26,7 +26,7 @@
 #| DISCRETE/CATEGORICAL |#
 
 ;; if all weights are zero, always chooses first
-;; weighted-list looks like '((3 hi) (1 bye) (7 foo))
+;; weighted-list looks like '((3 . hi) (1 . bye) (7 . foo))
 (define (discrete:rvs weighted-list)
   (let ((tot (apply + (map car weighted-list))))
     (let lp ((val (* tot (random 1.0)))
@@ -34,11 +34,11 @@
       (let* ((head (car lst))
              (val (- val (car head))))
         (if (<= val 0)
-          (cadr head)
+          (cdr head)
           (lp val (cdr lst)))))))
 
 ;;NOTE doesn't actually normalize
 (define (discrete:likelihood val weighted-list)
-  (car (find (lambda (elt) (eq? val (cadr elt)))
+  (car (find (lambda (elt) (eq? val (cdr elt)))
              weighted-list)))
 

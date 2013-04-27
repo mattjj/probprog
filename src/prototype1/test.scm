@@ -1,4 +1,5 @@
 (load "pp")
+(load "erps.scm")
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)

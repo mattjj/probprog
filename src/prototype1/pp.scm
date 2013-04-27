@@ -6,7 +6,11 @@
 ;; TODO undoable effects
 ;; TODO things break if no emit is called?
 ;; TODO dynamic context
-;; TODO TODO we're wasting burn-in!
+;; TODO TODO we're wasting burn-in! should there be memory? or should the
+;; semantics be different? what if we just set alternative ptrace when we
+;; exit... and pretend like we're undoing the first choice...
+;; yeah totally but we need to have more local data structures; doing it
+;; globally is lame
 
 (load "pp-records.scm")
 (load "random-variables.scm")
@@ -24,33 +28,12 @@
   (set! *niter* NUM-MH-STEPS)
   (set! *current-ptrace* (ptrace:new '() '()))
   (set! *alternative-ptrace* #f))
-
 (reset)
-
-#| SAMPLING FUNCTIONS |#
-
-(define (discrete weighted-list #!optional proposer)
-  (sample
-    'discrete
-    discrete:rvs
-    discrete:likelihood
-    weighted-list
-    proposer))
-
-(define (pramb . args)
-  (discrete (map (lambda (x) (list 1 x)) args)))
-
-(define (gaussian mean var #!optional proposer)
-  (sample
-    'gaussian
-    gaussian:rvs
-    gaussian:likelihood
-    (list mean var)
-    proposer))
 
 (define (sample name sampler scorer parameters proposer)
   (if (default-object? proposer)
     (set! proposer (prior-proposer sampler scorer parameters)))
+
   (let ((val (call-with-current-continuation
                (lambda (k)
                  (let ((val (sampler parameters)))
@@ -127,14 +110,6 @@
     (choice:set-val! new-choice new-val)
     (ptrace:add-choice! new-choice)
     new-val))
-
-#| EMITTING |#
-
-(define ((likelihood:additive-gaussian mean var) x obs)
-  (gaussian:likelihood obs (list (+ mean x) var)))
-
-(define (likelihood:exact x obs)
-  (if (eq? x obs) 1 0))
 
 #| RUNNING |#
 
