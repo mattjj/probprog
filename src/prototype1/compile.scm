@@ -1,4 +1,5 @@
 (cf "constants")
+(cf "eq-properties")
 (cf "util")
 (cf "randutil")
 (cf "pp-records")

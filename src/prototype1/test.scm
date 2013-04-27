@@ -26,7 +26,7 @@
     (emit x 1 (likelihood:additive-gaussian 0 0.1))
     (< x 0.5)))
 
-;; run with (estimate-mean dumb4 100)
+;; run with (estimate-mean dumb4 2000)
 ;; answer is x_prior_mean + x_var / (sum of all variances) * (obseved - emission_prior_mean)
 ;; with current settings, that's 2/3.5 which is about 0.5714
 (define (dumb4)
@@ -63,9 +63,9 @@
 (define (estimate-mean pp-thunk nsamples-to-collect
                        #!optional mh-iter-per-sample burn-in)
   (if (default-object? mh-iter-per-sample)
-    (set! mh-iter-per-sample 25))
+    (set! mh-iter-per-sample 5))
   (if (default-object? burn-in)
-    (set! burn-in (* 5 mh-iter-per-sample)))
+    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 10))))
 
   (run pp-thunk burn-in)
 
