@@ -2,7 +2,7 @@
 
 #| GAUSSIAN |#
 
-(define pi (acos -1))
+(define pi (acos -1)) ;; TODO is pi defined somewhere?
 
 (define (gaussian:rvs params)
   (let ((mean (car params))
