@@ -1,6 +1,8 @@
 (declare (usual-integrations))
 
-#||| PTRACE |||#
+;;;;;;;;;;;;
+;; ptrace ;;
+;;;;;;;;;;;;
 
 (define-record-type <ptrace>
                     (%ptrace:new choices prior-scores likelihood-score emit-continuation)
@@ -29,7 +31,9 @@
 (define (ptrace:add-prior-score! score)
   (ptrace:set-prior-scores! *current-ptrace* (cons score (ptrace:prior-scores *current-ptrace*))))
 
-#||| CHOICE |||#
+;;;;;;;;;;;;
+;; choice ;;
+;;;;;;;;;;;;
 
 (define-record-type <choice>
                     (choice:new name parameters proposer val continuation)

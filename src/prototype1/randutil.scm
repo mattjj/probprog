@@ -86,7 +86,7 @@
         (weights (discrete:weights params))
         (tot (discrete:tot params)))
     (if (default-object? weights)
-      (flo:- 0. (log (vector-length items)))
+      (flo:negate (log (vector-length items)))
       (let lp ((idx 0))
         (if (eq? val (vector-ref items idx))
           (flo:log (flo:/ (flo:vector-ref weights idx) tot))

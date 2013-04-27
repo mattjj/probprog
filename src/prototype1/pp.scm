@@ -7,7 +7,7 @@
 ;; Globals and initialization ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define NUM-MH-STEPS 200)
+(define NUM-MH-STEPS 100)
 
 (define *niter*)
 (define *current-ptrace*)
@@ -67,8 +67,8 @@
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
     *current-ptrace*
-    (let ((forward-choice-prob (flo:- 0. (log (ptrace:length *alternative-ptrace*))))
-          (backward-choice-prob (flo:- 0. (log (ptrace:length *current-ptrace*))))
+    (let ((forward-choice-prob (flo:negate (log (ptrace:length *alternative-ptrace*))))
+          (backward-choice-prob (flo:negate (log (ptrace:length *current-ptrace*))))
           (current-prior (prior-score *current-ptrace*))
           (alternative-prior (prior-score *alternative-ptrace*))
           (current-likelihood (ptrace:likelihood-score *current-ptrace*))
