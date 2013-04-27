@@ -63,7 +63,7 @@
 (define (estimate-mean pp-thunk nsamples-to-collect
                        #!optional mh-iter-per-sample burn-in)
   (if (default-object? mh-iter-per-sample)
-    (set! mh-iter-per-sample 5))
+    (set! mh-iter-per-sample 10))
   (if (default-object? burn-in)
     (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 10))))
 
