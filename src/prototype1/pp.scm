@@ -7,8 +7,7 @@
 ;; Globals and initialization ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define BURNIN-MH-STEPS 200)
-(define MH-STEPS 25)
+(define NUM-MH-STEPS 200)
 
 (define *niter*)
 (define *current-ptrace*)
