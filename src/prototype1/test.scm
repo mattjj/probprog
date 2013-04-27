@@ -26,14 +26,13 @@
     (emit x 1 (likelihood:additive-gaussian 0 0.1))
     (< x 0.5)))
 
-;; run with (estimate-mean dumb4 2000)
-;; answer is x_prior_mean + x_var / (sum of all variances) * (obseved - emission_prior_mean)
-;; with current settings, that's 2/3.5 which is about 0.5714
+;; run with (estimate-mean dumb4 1000)
+;; true posterior mean is 4*3/6 = 2
 (define (dumb4)
   (let ((x (gaussian 0 1))
-        (y (gaussian 0 2)))
-    (emit (+ x y) 2 (likelihood:additive-gaussian 0 0.5))
-    x))
+        (y (gaussian 0 4)))
+    (emit (+ x y) 3 (likelihood:additive-gaussian 0 1))
+    y))
 
 (define (dumb5)
   (let ((label (pramb 0 1)))
@@ -65,7 +64,7 @@
   (if (default-object? mh-iter-per-sample)
     (set! mh-iter-per-sample 10))
   (if (default-object? burn-in)
-    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 10))))
+    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 5))))
 
   (run pp-thunk burn-in)
 
