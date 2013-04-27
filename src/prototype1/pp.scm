@@ -134,7 +134,7 @@
                             (let ((val (thunk)))
                               (eq-put! thunk 'last-ptrace *current-ptrace*)
                               (eq-put! thunk 'total-iterations *niter-done*)
-                              (*top-level* (thunk))))))))
+                              (*top-level* val)))))))
 
 (define (resume thunk niter)
   (call-with-current-continuation

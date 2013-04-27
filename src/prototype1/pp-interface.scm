@@ -43,7 +43,7 @@
 ;;;;;;;;;;;;;;
 
 (define ((likelihood:additive-gaussian mean var) x obs)
-  (gaussian:log-likelihood obs (gaussian:make-params (+ mean x) var)))
+  (gaussian:log-likelihood (exact->inexact obs) (gaussian:make-params (+ mean x) var)))
 
 (define (likelihood:exact x obs)
   (if (eq? x obs) 0. neginf))

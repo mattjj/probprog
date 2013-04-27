@@ -17,8 +17,8 @@
       (= sum 0))))
 
 (define (dumb)
-  (let ((x (gaussian 0 1)))
-    (emit x 1 (likelihood:additive-gaussian 0 0.1))
+  (let ((x (gaussian 0 4)))
+    (emit x 1 (likelihood:additive-gaussian 0 0.01))
     x))
 
 (define (dumb3)
@@ -44,21 +44,35 @@
 ;; Utilities for gathering statistics ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (estimate-indicator-probability pp-thunk nsamples)
-  (let lp ((count 0)
-           (iter 0))
-    (if (< iter nsamples)
-      (lp
-        (+ count (if (pp-thunk) 1 0))
-        (+ iter 1))
-      (/ count nsamples))))
+(define (estimate-indicator-probability pp-thunk nsamples-to-collect
+                                        #!optional mh-iter-per-sample burn-in)
+  (if (default-object? mh-iter-per-sample)
+    (set! mh-iter-per-sample 25))
+  (if (default-object? burn-in)
+    (set! burn-in (* 5 mh-iter-per-sample)))
 
-(define (estimate-mean pp-thunk nsamples)
-  (let lp ((tot 0)
-           (iter 0))
-    (if (< iter nsamples)
+  (run pp-thunk burn-in)
+
+  (let lp ((count 0) (iter 0))
+    (if (< iter nsamples-to-collect)
       (lp
-        (+ tot (pp-thunk))
+        (+ count (if (resume pp-thunk mh-iter-per-sample) 1 0))
         (+ iter 1))
-      (/ tot nsamples))))
+      (/ count nsamples-to-collect))))
+
+(define (estimate-mean pp-thunk nsamples-to-collect
+                       #!optional mh-iter-per-sample burn-in)
+  (if (default-object? mh-iter-per-sample)
+    (set! mh-iter-per-sample 25))
+  (if (default-object? burn-in)
+    (set! burn-in (* 5 mh-iter-per-sample)))
+
+  (run pp-thunk burn-in)
+
+  (let lp ((tot 0.) (iter 0))
+    (if (< iter nsamples-to-collect)
+      (lp
+        (+ tot (resume pp-thunk mh-iter-per-sample))
+        (+ iter 1))
+      (/ tot nsamples-to-collect))))
 
