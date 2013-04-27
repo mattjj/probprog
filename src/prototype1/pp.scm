@@ -21,7 +21,7 @@
 
 (define (reset)
   (set! *niter-left* DEFAULT-MH-STEPS)
-  (set! *current-ptrace* (ptrace:new '() '()))
+  (set! *current-ptrace* (ptrace:new '()))
   (set! *alternative-ptrace* #f))
 (reset)
 
@@ -36,9 +36,9 @@
   (let ((val (call-with-current-continuation
                (lambda (k)
                  (let ((val (sampler parameters)))
-                   (ptrace:add-choice! (choice:new name parameters proposer val k))
+                   (ptrace:add-choice! (choice:new name parameters proposer val #f k))
                    val)))))
-    (ptrace:add-prior-score! (log-likelihood val parameters))
+    (choice:set-prior-score-in-current-choice! (log-likelihood val parameters))
     val))
 
 (define ((prior-proposer sampler log-likelihood parameters) choice)
@@ -71,7 +71,7 @@
 
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
-    (begin (set! *alternative-ptrace* (ptrace:new '() '())) *current-ptrace*)
+    (begin (set! *alternative-ptrace* (ptrace:new '())) *current-ptrace*)
     (let ((forward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *alternative-ptrace*)))))
           (backward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *current-ptrace*)))))
           (current-prior (prior-score *current-ptrace*))
@@ -90,7 +90,9 @@
                       *alternative-ptrace*)))))))
 
 (define (prior-score ptrace)
-  (list-ref (reverse (ptrace:prior-scores ptrace)) *common-ptrace-prefix-length*))
+  (let ((choice (list-ref (ptrace:choices ptrace) (- (ptrace:length ptrace)
+                                                     (+ 1 *common-ptrace-prefix-length*)))))
+    (choice:prior-score choice)))
 
 (define (choose-ptrace ptrace)
   (ptrace:set-all! *current-ptrace* ptrace)
@@ -121,7 +123,7 @@
 (define (run thunk niter)
   (fluid-let ((*niter-left* niter)
               (*niter-done* 0)
-              (*current-ptrace* (ptrace:new '() '()))
+              (*current-ptrace* (ptrace:new '()))
               (*alternative-ptrace* #f)
               (*backward-score* #f)
               (*forward-score* #f)
