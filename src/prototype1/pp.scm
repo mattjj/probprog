@@ -6,7 +6,7 @@
 ;; TODO undoable effects
 ;; TODO things break if no emit is called?
 ;; TODO dynamic context
-;; TESTS
+;; TODO TODO we're wasting burn-in!
 
 (load "pp-records.scm")
 (load "random-variables.scm")
@@ -99,14 +99,6 @@
                              (/ current-likelihood alternative-likelihood)
                              (/ backward-choice-prob forward-choice-prob)
                              (/ *backward-score* *forward-score*))))
-                    ;; (pp "current")
-                    ;; (pp *current-ptrace*)
-                    ;; (newline)
-                    ;; (pp "alternative")
-                    ;; (pp *alternative-ptrace*)
-                    ;; (newline)
-                    ;; (pp "acceptance ratio")
-                    ;; (pp accept-current-probability)
                     (if (< (random 1.0) accept-current-probability)
                       *current-ptrace*
                       *alternative-ptrace*)))))))

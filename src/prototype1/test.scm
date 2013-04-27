@@ -8,8 +8,10 @@
         (y (pramb 0 1))
         (z (pramb 0 1)))
     (let ((sum (+ x y z)))
-      (emit (and (= x 1) (= y 1)) #t)
-      (list x y z))))
+      (emit (or (= sum 0)
+                (= sum 2))
+            #t)
+      (= sum 0))))
 
 (define (dumb)
   (let ((x (gaussian 0 1)))
@@ -22,11 +24,12 @@
     (< x 0.5)))
 
 ;; run with (estimate-mean dumb4 100)
-;; answer is 1.2
+;; answer is x_prior_mean + x_var / (sum of all variances) * (obseved - emission_prior_mean)
+;; with current settings, that's 2/3.5 which is about 0.5714
 (define (dumb4)
   (let ((x (gaussian 0 1))
         (y (gaussian 0 2)))
-    (emit (+ x y) 3 (likelihood:additive-gaussian 0 0.5))
+    (emit (+ x y) 2 (likelihood:additive-gaussian 0 0.5))
     x))
 
 (define (dumb5)
