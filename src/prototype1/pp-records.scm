@@ -12,18 +12,27 @@
                     (likelihood-score ptrace:likelihood-score ptrace:set-likelihood-score!)
                     (emit-continuation ptrace:emit-continuation ptrace:set-emit-continuation!))
 
+(define (ptrace:set-all! pt1 pt2)
+  (ptrace:set-choices! pt1 (ptrace:choices pt2))
+  (ptrace:set-prior-scores! pt1 (ptrace:prior-scores pt2))
+  (ptrace:set-likelihood-score! pt1 (ptrace:likelihood-score pt2))
+  (ptrace:set-emit-continuation! pt1 (ptrace:emit-continuation pt2)))
+
 (define (ptrace:new choices scores)
   (%ptrace:new choices scores #f #f))
 
 (define (ptrace:length ptrace)
   (length (ptrace:choices ptrace)))
 
-;; up to and NOT including index
-(define (ptrace:head ptrace index)
-  (let ((oldlen (ptrace:length ptrace)))
-    (ptrace:new
-        (list-tail (ptrace:choices ptrace) (- oldlen index))
-        (list-tail (ptrace:prior-scores ptrace) (- oldlen index)))))
+;; truncates up to and NOT including index
+(define (ptrace:head! ptrace index)
+  (let* ((oldlen (ptrace:length ptrace))
+         (index (- oldlen index))
+         (choices (list-tail (ptrace:choices ptrace) index))
+         (scores (list-tail (ptrace:prior-scores ptrace) index)))
+    (ptrace:set-choices! ptrace choices)
+    (ptrace:set-prior-scores! ptrace scores)
+    ptrace))
 
 (define (ptrace:add-choice! choice)
   (ptrace:set-choices! *current-ptrace* (cons choice (ptrace:choices *current-ptrace*))))

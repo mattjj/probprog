@@ -71,7 +71,7 @@
 
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
-    *current-ptrace*
+    (begin (set! *alternative-ptrace* (ptrace:new '() '())) *current-ptrace*)
     (let ((forward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *alternative-ptrace*)))))
           (backward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *current-ptrace*)))))
           (current-prior (prior-score *current-ptrace*))
@@ -93,18 +93,18 @@
   (list-ref (reverse (ptrace:prior-scores ptrace)) *common-ptrace-prefix-length*))
 
 (define (choose-ptrace ptrace)
-  (set! *current-ptrace* ptrace)
+  (ptrace:set-all! *current-ptrace* ptrace)
   (within-continuation (ptrace:emit-continuation ptrace) (lambda () #!unspecific)))
 
 (define (try-another)
   (set! *niter-left* (- *niter-left* 1))
-  (set! *alternative-ptrace* *current-ptrace*)
-  (let* ((proposal-index (random (ptrace:length *current-ptrace*)))
-         (new-ptrace (ptrace:head *current-ptrace* proposal-index))
-         (choice (list-ref (reverse (ptrace:choices *current-ptrace*)) proposal-index))
+  (ptrace:set-all! *alternative-ptrace* *current-ptrace*)
+  (let* ((len (ptrace:length *current-ptrace*))
+         (proposal-index (random len))
+         (choice (list-ref (ptrace:choices *current-ptrace*) (- len (+ 1 proposal-index))))
          (k (choice:continuation choice)))
-    (set! *common-ptrace-prefix-length* (ptrace:length new-ptrace))
-    (set! *current-ptrace* new-ptrace)
+    (set! *common-ptrace-prefix-length* proposal-index)
+    (ptrace:head! *current-ptrace* proposal-index)
     (within-continuation k (lambda () (propose choice)))))
 
 (define (propose choice)
