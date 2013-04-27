@@ -1,7 +1,7 @@
 (declare (usual-integrations))
 
-(load "pp-records.scm")
-(load "random-variables.scm")
+(load "pp-records")
+(load "constants")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Globals and initialization ;;
@@ -26,23 +26,23 @@
 ;; Forward-sampling with bookkeeping ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (sample name sampler scorer parameters proposer)
+(define (sample name sampler log-likelihood parameters proposer)
   (if (default-object? proposer)
-    (set! proposer (prior-proposer sampler scorer parameters)))
+    (set! proposer (prior-proposer sampler log-likelihood parameters)))
 
   (let ((val (call-with-current-continuation
                (lambda (k)
                  (let ((val (sampler parameters)))
                    (ptrace:add-choice! (choice:new name parameters proposer val k))
                    val)))))
-    (ptrace:add-prior-score! (scorer val parameters))
+    (ptrace:add-prior-score! (log-likelihood val parameters))
     val))
 
-(define ((prior-proposer sampler scorer parameters) choice)
+(define ((prior-proposer sampler log-likelihood parameters) choice)
   (let ((new-val (sampler parameters))
         (old-val (choice:val choice)))
-    (let ((forward-score (scorer new-val parameters))
-          (backward-score (scorer old-val parameters)))
+    (let ((forward-score (log-likelihood new-val parameters))
+          (backward-score (log-likelihood old-val parameters)))
       (set! *forward-score* forward-score)   ;; forward means alternative -> current
       (set! *backward-score* backward-score) ;; backward means current -> alternative
       new-val)))
@@ -67,20 +67,20 @@
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
     *current-ptrace*
-    (let ((forward-choice-prob (/ 1 (ptrace:length *alternative-ptrace*)))
-          (backward-choice-prob (/ 1 (ptrace:length *current-ptrace*)))
+    (let ((forward-choice-prob (flo:- 0. (log (ptrace:length *alternative-ptrace*))))
+          (backward-choice-prob (flo:- 0. (log (ptrace:length *current-ptrace*))))
           (current-prior (prior-score *current-ptrace*))
           (alternative-prior (prior-score *alternative-ptrace*))
           (current-likelihood (ptrace:likelihood-score *current-ptrace*))
           (alternative-likelihood (ptrace:likelihood-score *alternative-ptrace*)))
-      (cond ((= alternative-likelihood 0) *current-ptrace*)
-            ((= current-likelihood 0) *alternative-ptrace*)
+      (cond ((flo:= alternative-likelihood neginf) *current-ptrace*)
+            ((flo:= current-likelihood neginf) *alternative-ptrace*)
             (else (let ((accept-current-probability
-                          (* (/ current-prior alternative-prior)
-                             (/ current-likelihood alternative-likelihood)
-                             (/ backward-choice-prob forward-choice-prob)
-                             (/ *backward-score* *forward-score*))))
-                    (if (< (random 1.0) accept-current-probability)
+                          (flo:sum (flo:- current-prior alternative-prior)
+                                   (flo:- current-likelihood alternative-likelihood)
+                                   (flo:- backward-choice-prob forward-choice-prob)
+                                   (flo:- *backward-score* *forward-score*))))
+                    (if (flo:< (flo:log (random 1.0)) accept-current-probability)
                       *current-ptrace*
                       *alternative-ptrace*)))))))
 

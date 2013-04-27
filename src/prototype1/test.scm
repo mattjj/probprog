@@ -1,6 +1,7 @@
-(load "pp")
-(load "pp-randomness")
+(declare (usual-integrations))
 
+(load "pp")
+(load "pp-interface")
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)

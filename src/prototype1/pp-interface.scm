@@ -1,22 +1,29 @@
 (declare (usual-integrations))
 
+;; this file contains the interface functions users can call
+
+(load "randutil")
+
 ;;;;;;;;;;;;;;
 ;; SAMPLING ;;
 ;;;;;;;;;;;;;;
 
 ;; discrete
 
-(define (discrete weighted-list #!optional proposer)
+(define (discrete items #!optional weights proposer)
+  (if (and (default-object? proposer)
+           (not (default-object? weights))
+           (procedure? weights))
+    (let ((real-proposer weights))
+      (set! weights proposer)
+      (set! proposer real-proposer)))
+
   (sample
     'discrete
     discrete:rvs
-    discrete:likelihood
-    weighted-list
+    discrete:log-likelihood
+    (discrete:make-params items weights)
     proposer))
-
-;; TODO make this a macro so that arguments are delayed
-(define (pramb . args)
-  (discrete (map (lambda (x) (cons 1 x)) args)))
 
 ;; continuous
 
@@ -27,8 +34,8 @@
   (sample
     'gaussian
     gaussian:rvs
-    gaussian:likelihood
-    (cons mean var)
+    gaussian:log-likelihood
+    (gaussian:make-params mean var)
     proposer))
 
 ;;;;;;;;;;;;;;
@@ -36,21 +43,21 @@
 ;;;;;;;;;;;;;;
 
 (define ((likelihood:additive-gaussian mean var) x obs)
-  (gaussian:likelihood obs (cons (+ mean x) var)))
+  (gaussian:log-likelihood obs (gaussian:make-params (+ mean x) var)))
 
 (define (likelihood:exact x obs)
-  (if (eq? x obs) 1 0))
+  (if (eq? x obs) 0. neginf))
 
 ;;;;;;;;;;;;;;;
 ;; PROPOSALS ;;
 ;;;;;;;;;;;;;;;
 
 (define ((proposals:additive-gaussian mean var) choice)
-  (let* ((params (cons mean var))
+  (let* ((params (gaussian:make-params mean var))
          (old-val (choice:val choice))
          (nudge (gaussian:rvs params))
-         (new-val (+ old-val nudge))
-         (proposal-score (gaussian:likelihood nudge params)))
+         (new-val (flo:+ old-val nudge))
+         (proposal-score (gaussian:log-likelihood nudge params)))
     (set! *forward-score* proposal-score)
     (set! *backward-score* proposal-score)
     new-val))
