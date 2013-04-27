@@ -22,7 +22,7 @@
 
 (define (gaussian mean var #!optional proposer)
   (if (default-object? proposer)
-    (set! proposer (proposals:additive-gaussian 0 (/ var 4))))
+    (set! proposer (proposals:additive-gaussian 0 (/ var 2))))
 
   (sample
     'gaussian

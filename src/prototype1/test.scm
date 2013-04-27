@@ -1,5 +1,6 @@
 (load "pp")
-(load "erps.scm")
+(load "pp-randomness")
+
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)
@@ -37,4 +38,26 @@
   (let ((label (pramb 0 1)))
     (emit (gaussian (* 2 label) 1) 2 (likelihood:additive-gaussian 0 0.2))
     label))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utilities for gathering statistics ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (estimate-indicator-probability pp-thunk nsamples)
+  (let lp ((count 0)
+           (iter 0))
+    (if (< iter nsamples)
+      (lp
+        (+ count (if (pp-thunk) 1 0))
+        (+ iter 1))
+      (/ count nsamples))))
+
+(define (estimate-mean pp-thunk nsamples)
+  (let lp ((tot 0)
+           (iter 0))
+    (if (< iter nsamples)
+      (lp
+        (+ tot (pp-thunk))
+        (+ iter 1))
+      (/ tot nsamples))))
 

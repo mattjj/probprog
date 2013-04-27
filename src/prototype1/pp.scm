@@ -1,21 +1,14 @@
 (declare (usual-integrations))
 
-;; TODO make pramb a macro so that it doesn't evalute its arguments
-;; TODO use log probabilities
-;; TODO use flo operations for speed (prevent boxing/unboxing)
-;; TODO undoable effects
-;; TODO things break if no emit is called?
-;; TODO dynamic context
-;; TODO TODO we're wasting burn-in! should there be memory? or should the
-;; semantics be different? what if we just set alternative ptrace when we
-;; exit... and pretend like we're undoing the first choice...
-;; yeah totally but we need to have more local data structures; doing it
-;; globally is lame
-
 (load "pp-records.scm")
 (load "random-variables.scm")
 
-(define NUM-MH-STEPS 100)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Globals and initialization ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define BURNIN-MH-STEPS 200)
+(define MH-STEPS 25)
 
 (define *niter*)
 (define *current-ptrace*)
@@ -29,6 +22,10 @@
   (set! *current-ptrace* (ptrace:new '() '()))
   (set! *alternative-ptrace* #f))
 (reset)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Forward-sampling with bookkeeping ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (sample name sampler scorer parameters proposer)
   (if (default-object? proposer)
@@ -51,7 +48,9 @@
       (set! *backward-score* backward-score) ;; backward means current -> alternative
       new-val)))
 
-#| MH over traces |#
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
+;; Emit and MH over traces ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 
 (define (emit var observed-value #!optional likelihood-function)
   (if (default-object? likelihood-function)
@@ -110,24 +109,4 @@
     (choice:set-val! new-choice new-val)
     (ptrace:add-choice! new-choice)
     new-val))
-
-#| RUNNING |#
-
-(define (estimate-indicator-probability thunk nsamples)
-  (let lp ((count 0)
-           (iter 0))
-    (if (< iter nsamples)
-      (lp
-        (+ count (if (thunk) 1 0))
-        (+ iter 1))
-      (/ count nsamples))))
-
-(define (estimate-mean thunk nsamples)
-  (let lp ((tot 0)
-           (iter 0))
-    (if (< iter nsamples)
-      (lp
-        (+ tot (thunk))
-        (+ iter 1))
-      (/ tot nsamples))))
 
