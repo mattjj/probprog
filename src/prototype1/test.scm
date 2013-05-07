@@ -1,4 +1,7 @@
-(declare (usual-integrations))
+(declare (usual-integrations +))
+
+(define default:+ +)
+(define (+ . args) (apply default:+ (map choice:force args)))
 
 (load "pp")
 (load "pp-interface")
@@ -55,7 +58,7 @@
   (let lp ((count 0) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ count (if (resume pp-thunk mh-iter-per-sample) 1 0))
+        (+ count (if (choice:force (resume pp-thunk mh-iter-per-sample)) 1 0))
         (+ iter 1))
       (/ count nsamples-to-collect))))
 
@@ -71,7 +74,7 @@
   (let lp ((tot 0.) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ tot (resume pp-thunk mh-iter-per-sample))
+        (+ tot (choice:force (resume pp-thunk mh-iter-per-sample)))
         (+ iter 1))
       (/ tot nsamples-to-collect))))
 

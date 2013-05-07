@@ -62,3 +62,11 @@
     (set! *backward-score* proposal-score)
     new-val))
 
+(define ((proposals:prior-proposer sampler log-likelihood parameters) choice)
+  (let ((new-val (sampler parameters))
+        (old-val (choice:val choice)))
+    (let ((forward-score (log-likelihood new-val parameters))
+          (backward-score (log-likelihood old-val parameters)))
+      (set! *forward-score* forward-score)   ;; forward means alternative -> current
+      (set! *backward-score* backward-score) ;; backward means current -> alternative
+      new-val)))

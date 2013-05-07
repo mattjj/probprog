@@ -5,19 +5,21 @@
 ;;;;;;;;;;;;
 
 (define-record-type <ptrace>
-                    (%ptrace:new choices likelihood-score emit-continuation)
+                    (%ptrace:new choices likelihood-score emit-continuation doer-hook)
                     ptrace?
                     (choices ptrace:choices ptrace:set-choices!)
                     (likelihood-score ptrace:likelihood-score ptrace:set-likelihood-score!)
-                    (emit-continuation ptrace:emit-continuation ptrace:set-emit-continuation!))
+                    (emit-continuation ptrace:emit-continuation ptrace:set-emit-continuation!)
+                    (doer-hook ptrace:doer-hook ptrace:set-doer-hook!))
 
 (define (ptrace:set-all! pt1 pt2)
   (ptrace:set-choices! pt1 (ptrace:choices pt2))
   (ptrace:set-likelihood-score! pt1 (ptrace:likelihood-score pt2))
-  (ptrace:set-emit-continuation! pt1 (ptrace:emit-continuation pt2)))
+  (ptrace:set-emit-continuation! pt1 (ptrace:emit-continuation pt2))
+  (ptrace:set-doer-hook! pt1 (ptrace:doer-hook pt2)))
 
-(define (ptrace:new choices)
-  (%ptrace:new choices #f #f))
+(define (ptrace:new)
+  (%ptrace:new '() #f #f #f))
 
 (define (ptrace:length ptrace)
   (length (ptrace:choices ptrace)))
@@ -40,24 +42,32 @@
 ;;;;;;;;;;;;
 
 (define-record-type <choice>
-                    (choice:new name parameters proposer val prior-score continuation)
+                    (%choice:new name parameters log-likelihood proposer val forced continuation)
                     choice?
-                    (name choice:name choice:set-name!)
-                    (parameters choice:parameters choice:set-parameters!)
-                    (proposer choice:proposer choice:set-proposer!)
+                    (name choice:name)
+                    (parameters choice:parameters)
+                    (log-likelihood choice:log-likelihood)
+                    (proposer choice:proposer)
                     (val choice:val choice:set-val!)
-                    (prior-score choice:prior-score choice:set-prior-score!)
-                    (continuation choice:continuation choice:set-continuation!))
+                    (forced choice:forced? choice:set-forced!)
+                    (continuation choice:continuation))
+
+(define (choice:new name parameters log-likelihood proposer k)
+  (%choice:new name parameters log-likelihood proposer 'unset #f k))
 
 (define (choice:copy choice)
-  (choice:new
-    (choice:name choice)
-    (choice:parameters choice)
-    (choice:proposer choice)
-    (choice:val choice)
-    (choice:prior-score choice)
-    (choice:continuation choice)))
+  (%choice:new (choice:name choice)
+               (choice:parameters choice)
+               (choice:log-likelihood choice)
+               (choice:proposer choice)
+               'unset
+               (choice:forced? choice)
+               (choice:continuation choice)))
 
-(define (choice:set-prior-score-in-current-choice! score)
-  (choice:set-prior-score! (car (ptrace:choices *current-ptrace*)) score))
+(define (choice:force c)
+  (if (not (choice? c))
+    c
+    (begin
+      (choice:set-forced! c #t)
+      (choice:val c))))
 

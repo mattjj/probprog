@@ -21,7 +21,7 @@
 
 (define (reset)
   (set! *niter-left* DEFAULT-MH-STEPS)
-  (set! *current-ptrace* (ptrace:new '()))
+  (set! *current-ptrace* (ptrace:new))
   (set! *alternative-ptrace* #f))
 (reset)
 
@@ -31,24 +31,19 @@
 
 (define (sample name sampler log-likelihood parameters proposer)
   (if (default-object? proposer)
-    (set! proposer (prior-proposer sampler log-likelihood parameters)))
+    (set! proposer (proposals:prior-proposer sampler log-likelihood parameters)))
 
   (let ((val (call-with-current-continuation
                (lambda (k)
-                 (let ((val (sampler parameters)))
-                   (ptrace:add-choice! (choice:new name parameters proposer val #f k))
-                   val)))))
-    (choice:set-prior-score-in-current-choice! (log-likelihood val parameters))
-    val))
+                 (ptrace:add-choice! (choice:new name parameters log-likelihood proposer k))
+                 (sampler parameters)))))
+    (let ((choice (car (ptrace:choices *current-ptrace*))))
+      (define (doer) (choice:set-val! choice val))
+      (ptrace:set-doer-hook! *current-ptrace* doer)
+      (doer)
+      choice)))
 
-(define ((prior-proposer sampler log-likelihood parameters) choice)
-  (let ((new-val (sampler parameters))
-        (old-val (choice:val choice)))
-    (let ((forward-score (log-likelihood new-val parameters))
-          (backward-score (log-likelihood old-val parameters)))
-      (set! *forward-score* forward-score)   ;; forward means alternative -> current
-      (set! *backward-score* backward-score) ;; backward means current -> alternative
-      new-val)))
+;; TODO move this to pp-interface
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
@@ -71,7 +66,7 @@
 
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
-    (begin (set! *alternative-ptrace* (ptrace:new '())) *current-ptrace*)
+    (begin (set! *alternative-ptrace* (ptrace:new)) *current-ptrace*)
     (let ((forward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *alternative-ptrace*)))))
           (backward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *current-ptrace*)))))
           (current-prior (prior-score *current-ptrace*))
@@ -92,9 +87,10 @@
 (define (prior-score ptrace)
   (let ((choice (list-ref (ptrace:choices ptrace) (- (ptrace:length ptrace)
                                                      (+ 1 *common-ptrace-prefix-length*)))))
-    (choice:prior-score choice)))
+    ((choice:log-likelihood choice) (choice:val choice) (choice:parameters choice))))
 
 (define (choose-ptrace ptrace)
+  ((ptrace:doer-hook ptrace))
   (ptrace:set-all! *current-ptrace* ptrace)
   (within-continuation (ptrace:emit-continuation ptrace) (lambda () #!unspecific)))
 
@@ -110,10 +106,8 @@
     (within-continuation k (lambda () (propose choice)))))
 
 (define (propose choice)
-  (let ((new-val ((choice:proposer choice) choice))
-        (new-choice (choice:copy choice)))
-    (choice:set-val! new-choice new-val)
-    (ptrace:add-choice! new-choice)
+  (let ((new-val ((choice:proposer choice) choice)))
+    (ptrace:add-choice! (choice:copy choice))
     new-val))
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -123,7 +117,7 @@
 (define (run thunk niter)
   (fluid-let ((*niter-left* niter)
               (*niter-done* 0)
-              (*current-ptrace* (ptrace:new '()))
+              (*current-ptrace* (ptrace:new))
               (*alternative-ptrace* #f)
               (*backward-score* #f)
               (*forward-score* #f)
