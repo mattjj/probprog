@@ -42,7 +42,8 @@
 ;;;;;;;;;;;;
 
 (define-record-type <choice>
-                    (%choice:new name parameters log-likelihood proposer val forced continuation)
+                    (%choice:new name parameters log-likelihood proposer val
+                                 forced continuation force-hook force-set-hook)
                     choice?
                     (name choice:name)
                     (parameters choice:parameters)
@@ -50,10 +51,14 @@
                     (proposer choice:proposer)
                     (val choice:val choice:set-val!)
                     (forced choice:forced? choice:set-forced!)
-                    (continuation choice:continuation))
+                    (continuation choice:continuation)
+                    (force-hook choice:force-hook)
+                    (force-set-hook choice:force-set-hook))
 
-(define (choice:new name parameters log-likelihood proposer k)
-  (%choice:new name parameters log-likelihood proposer 'unset #f k))
+(define (choice:new name parameters log-likelihood proposer k #!optional force-hook force-set-hook)
+  (if (default-object? force-hook) (set! force-hook (lambda () #!unspecific)))
+  (if (default-object? force-set-hook) (set! force-set-hook (lambda () #!unspecific)))
+  (%choice:new name parameters log-likelihood proposer 'unset #f k force-hook force-set-hook))
 
 (define (choice:copy choice)
   (%choice:new (choice:name choice)
@@ -62,12 +67,22 @@
                (choice:proposer choice)
                'unset
                (choice:forced? choice)
-               (choice:continuation choice)))
+               (choice:continuation choice)
+               (choice:force-hook choice)
+               (choice:force-set-hook choice)))
 
 (define (choice:force c)
   (if (not (choice? c))
     c
     (begin
       (choice:set-forced! c #t)
+      ((choice:force-hook c))
       (choice:val c))))
+
+(define (choice:force-set! c val)
+  (let ((old-val (choice:val c)))
+    (choice:set-forced! c #t)
+    (choice:set-val! c val)
+    ((choice:force-set-hook c))
+    old-val))
 

@@ -29,13 +29,10 @@
 ;; Forward-sampling with bookkeeping ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (sample name sampler log-likelihood parameters proposer)
-  (if (default-object? proposer)
-    (set! proposer (proposals:prior-proposer sampler log-likelihood parameters)))
-
+(define (sample sampler parameters choice-constructor)
   (let ((val (call-with-current-continuation
                (lambda (k)
-                 (ptrace:add-choice! (choice:new name parameters log-likelihood proposer k))
+                 (ptrace:add-choice! (choice-constructor k))
                  (sampler parameters)))))
     (let ((choice (car (ptrace:choices *current-ptrace*))))
       (define (doer) (choice:set-val! choice val))

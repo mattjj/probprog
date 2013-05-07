@@ -1,10 +1,16 @@
 (declare (usual-integrations +))
 
+;; TODO TODO everything needs to be overloaded...
 (define default:+ +)
 (define (+ . args) (apply default:+ (map choice:force args)))
+;; (define + (make-generic-procedure (make-procedure-arity 1 #f) 'generic+))
+;; (set-generic-procedure-default-generator!
+;;     + (lambda (proc tags) (lambda args (apply default:+ (map choice:force args)))))
 
 (load "pp")
-(load "pp-interface")
+(load "gaussians")
+;; (load "smart-gaussians")
+(load "discrete")
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)
@@ -36,11 +42,6 @@
         (y (gaussian 0 4)))
     (emit (+ x y) 3 (likelihood:additive-gaussian 0 1))
     y))
-
-(define (dumb5)
-  (let ((label (pramb 0 1)))
-    (emit (gaussian (* 2 label) 1) 2 (likelihood:additive-gaussian 0 0.2))
-    label))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utilities for gathering statistics ;;
