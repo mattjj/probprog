@@ -43,8 +43,6 @@
       (doer)
       choice)))
 
-;; TODO move this to pp-interface
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
