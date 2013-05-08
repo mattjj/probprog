@@ -101,7 +101,6 @@
 (define (propose choice)
   (let ((new-val ((choice:proposer choice) (choice:val choice)))
         (new-choice (choice:copy choice)))
-    (choice:set-val! new-choice new-val)
     (ptrace:add-choice! new-choice)
     new-val))
 
