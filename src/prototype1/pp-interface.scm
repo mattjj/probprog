@@ -10,17 +10,6 @@
 
 ;; discrete
 
-;; (define (sample sampler-fn loglikelihood-fn proposer-fn)
-;;   (let ((val (call-with-current-continuation
-;;                (lambda (k)
-;;                  (ptrace:add-choice! (choice:new proposer-fn 'unset #f k))
-;;                  (sampler-fn)))))
-;;     (let ((c (car (ptrace:choices *current-ptrace*))))
-;;       (choice:set-val! c val)
-;;       (choice:set-prior-score! c (likelihood-fn val)))
-;;     val))
-
-
 (define (discrete items #!optional weights proposer)
   (if (and (default-object? proposer)
            (not (default-object? weights))
