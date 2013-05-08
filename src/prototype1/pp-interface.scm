@@ -20,7 +20,6 @@
 ;;       (choice:set-prior-score! c (likelihood-fn val)))
 ;;     val))
 
-;; TODO remove param packaging
 
 (define (discrete items #!optional weights proposer)
   (if (and (default-object? proposer)

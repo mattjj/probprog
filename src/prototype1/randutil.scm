@@ -10,7 +10,7 @@
 ;; Gaussian ;;
 ;;;;;;;;;;;;;;
 
-;; parameters
+;; packaging parameters is convenient
 
 (define (gaussian:make-params mean var)
   (make-flo-vector (cons mean var)))
@@ -46,7 +46,8 @@
 ;; Discrete/categorical ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; parameters
+;; packaging parameters is convenient
+
 (define (discrete:make-params items #!optional weights)
   (let ((tot #f))
     (if (not (default-object? weights))
