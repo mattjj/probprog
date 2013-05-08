@@ -42,47 +42,49 @@
 ;;;;;;;;;;;;
 
 (define-record-type <choice>
-                    (%choice:new name parameters log-likelihood proposer val
-                                 forced continuation force-hook force-set-hook)
+                    (%choice:new name parameters log-likelihood proposer sample continuation)
                     choice?
                     (name choice:name)
                     (parameters choice:parameters)
                     (log-likelihood choice:log-likelihood)
                     (proposer choice:proposer)
-                    (val choice:val choice:set-val!)
-                    (forced choice:forced? choice:set-forced!)
-                    (continuation choice:continuation)
-                    (force-hook choice:force-hook)
-                    (force-set-hook choice:force-set-hook))
+                    (sample choice:sample choice:set-sample!)
+                    (continuation choice:continuation))
 
-(define (choice:new name parameters log-likelihood proposer k #!optional force-hook force-set-hook)
-  (if (default-object? force-hook) (set! force-hook (lambda () #!unspecific)))
-  (if (default-object? force-set-hook) (set! force-set-hook (lambda () #!unspecific)))
-  (%choice:new name parameters log-likelihood proposer 'unset #f k force-hook force-set-hook))
+(define (choice:new name parameters log-likelihood proposer k)
+  (%choice:new name parameters log-likelihood proposer 'unset #f k))
 
 (define (choice:copy choice)
   (%choice:new (choice:name choice)
                (choice:parameters choice)
                (choice:log-likelihood choice)
                (choice:proposer choice)
-               'unset
-               (choice:forced? choice)
-               (choice:continuation choice)
-               (choice:force-hook choice)
-               (choice:force-set-hook choice)))
+               (choice:sample)
+               (choice:continuation choice)))
 
-(define (choice:force c)
-  (if (not (choice? c))
-    c
+;;;;;;;;;;;;
+;; sample ;;
+;;;;;;;;;;;;
+
+(define-record-type <sample>
+                    (%sample:new val forced?)
+                    sample?
+                    (val sample:val sample:set-val!)
+                    (forced? sample:forced? sample:set-forced!))
+
+(define (sample:new-empty)
+  (%sample:new 'unset #f))
+
+(define (sample:force s)
+  (if (not (sample? s))
+    s
     (begin
-      (choice:set-forced! c #t)
-      ((choice:force-hook c))
-      (choice:val c))))
+      (sample:set-forced! s #t)
+      (sample:val s))))
 
-(define (choice:force-set! c val)
-  (let ((old-val (choice:val c)))
-    (choice:set-forced! c #t)
-    (choice:set-val! c val)
-    ((choice:force-set-hook c))
+(define (sample:force-set! s val)
+  (let ((old-val (sample:val s)))
+    (sample:set-forced! s #t)
+    (sample:set-val! s val)
     old-val))
 

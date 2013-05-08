@@ -29,7 +29,7 @@
 ;; Forward-sampling with bookkeeping ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (sample sampler parameters choice-constructor)
+(define (sample sampler parameters)
   (let ((val (call-with-current-continuation
                (lambda (k)
                  (ptrace:add-choice! (choice-constructor k))
