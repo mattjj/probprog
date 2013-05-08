@@ -30,9 +30,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (sample name sampler log-likelihood parameters proposer)
-  (if (default-object? proposer)
-    (set! proposer (prior-proposer sampler log-likelihood parameters)))
-
   (let ((val (call-with-current-continuation
                (lambda (k)
                  (let ((val (sampler parameters)))
