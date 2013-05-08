@@ -40,21 +40,16 @@
 ;;;;;;;;;;;;
 
 (define-record-type <choice>
-                    (choice:new name parameters proposer val prior-score continuation)
+                    (%choice:new proposer continuation val prior-score)
                     choice?
-                    (name choice:name choice:set-name!)
-                    (parameters choice:parameters choice:set-parameters!)
                     (proposer choice:proposer choice:set-proposer!)
+                    (continuation choice:continuation choice:set-continuation!)
                     (val choice:val choice:set-val!)
-                    (prior-score choice:prior-score choice:set-prior-score!)
-                    (continuation choice:continuation choice:set-continuation!))
+                    (prior-score choice:prior-score choice:set-prior-score!))
+
+(define (choice:new proposer continuation)
+  (%choice:new proposer continuation 'unset 'unset))
 
 (define (choice:copy choice)
-  (choice:new
-    (choice:name choice)
-    (choice:parameters choice)
-    (choice:proposer choice)
-    'unset
-    (choice:prior-score choice)
-    (choice:continuation choice)))
+  (choice:new (choice:proposer choice) (choice:continuation choice)))
 

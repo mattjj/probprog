@@ -29,24 +29,15 @@
 ;; Forward-sampling with bookkeeping ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (sample name sampler log-likelihood parameters proposer)
+(define (sample sampler-fn loglikelihood-fn proposer-fn)
   (let ((val (call-with-current-continuation
                (lambda (k)
-                 (ptrace:add-choice! (choice:new name parameters proposer 'unset #f k))
-                 (sampler parameters)))))
+                 (ptrace:add-choice! (choice:new proposer-fn k))
+                 (sampler-fn)))))
     (let ((c (car (ptrace:choices *current-ptrace*))))
       (choice:set-val! c val)
-      (choice:set-prior-score! c (log-likelihood val parameters)))
+      (choice:set-prior-score! c (loglikelihood-fn val)))
     val))
-
-(define ((prior-proposer sampler log-likelihood parameters) choice)
-  (let ((new-val (sampler parameters))
-        (old-val (choice:val choice)))
-    (let ((forward-score (log-likelihood new-val parameters))
-          (backward-score (log-likelihood old-val parameters)))
-      (set! *forward-score* forward-score)   ;; forward means alternative -> current
-      (set! *backward-score* backward-score) ;; backward means current -> alternative
-      new-val)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
@@ -108,7 +99,7 @@
     (within-continuation k (lambda () (propose choice)))))
 
 (define (propose choice)
-  (let ((new-val ((choice:proposer choice) choice))
+  (let ((new-val ((choice:proposer choice) (choice:val choice)))
         (new-choice (choice:copy choice)))
     (choice:set-val! new-choice new-val)
     (ptrace:add-choice! new-choice)
