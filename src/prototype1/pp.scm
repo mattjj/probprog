@@ -32,10 +32,11 @@
 (define (sample name sampler log-likelihood parameters proposer)
   (let ((val (call-with-current-continuation
                (lambda (k)
-                 (let ((val (sampler parameters)))
-                   (ptrace:add-choice! (choice:new name parameters proposer val #f k))
-                   val)))))
-    (choice:set-prior-score-in-current-choice! (log-likelihood val parameters))
+                 (ptrace:add-choice! (choice:new name parameters proposer 'unset #f k))
+                 (sampler parameters)))))
+    (let ((c (car (ptrace:choices *current-ptrace*))))
+      (choice:set-val! c val)
+      (choice:set-prior-score! c (log-likelihood val parameters)))
     val))
 
 (define ((prior-proposer sampler log-likelihood parameters) choice)

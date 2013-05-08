@@ -54,10 +54,7 @@
     (choice:name choice)
     (choice:parameters choice)
     (choice:proposer choice)
-    (choice:val choice)
+    'unset
     (choice:prior-score choice)
     (choice:continuation choice)))
-
-(define (choice:set-prior-score-in-current-choice! score)
-  (choice:set-prior-score! (car (ptrace:choices *current-ptrace*)) score))
 
