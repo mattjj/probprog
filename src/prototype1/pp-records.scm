@@ -40,16 +40,29 @@
 ;;;;;;;;;;;;
 
 (define-record-type <choice>
-                    (%choice:new proposer continuation val prior-score)
+                    (%choice:new proposer continuation random-val prior-score)
                     choice?
                     (proposer choice:proposer choice:set-proposer!)
                     (continuation choice:continuation choice:set-continuation!)
-                    (val choice:val choice:set-val!)
+                    (random-val choice:random-val choice:set-random-val!)
                     (prior-score choice:prior-score choice:set-prior-score!))
 
 (define (choice:new proposer continuation)
-  (%choice:new proposer continuation 'unset 'unset))
+  (%choice:new proposer continuation (random-value:new) 'unset))
 
 (define (choice:copy choice)
-  (choice:new (choice:proposer choice) (choice:continuation choice)))
+  (%choice:new (choice:proposer choice) (choice:continuation choice)
+               (random-value:new) 'unset))
+
+;;;;;;;;;;;;;;;;;;
+;; random value ;;
+;;;;;;;;;;;;;;;;;;
+
+(define-record-type <random-value>
+                    (%random-value:new val)
+                    random-value?
+                    (val random-value:val random-value:set-val!))
+
+(define (random-value:new)
+  (%random-value:new 'unset))
 

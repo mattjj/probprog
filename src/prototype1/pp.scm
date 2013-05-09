@@ -34,8 +34,9 @@
                (lambda (k)
                  (ptrace:add-choice! (choice:new proposer-fn k))
                  (sampler-fn)))))
-    (let ((c (car (ptrace:choices *current-ptrace*))))
-      (choice:set-val! c val)
+    (let* ((c (car (ptrace:choices *current-ptrace*)))
+           (rv (choice:random-val c)))
+      (random-value:set-val! rv val)
       (choice:set-prior-score! c (loglikelihood-fn val)))
     val))
 
@@ -99,7 +100,7 @@
     (within-continuation k (lambda () (propose choice)))))
 
 (define (propose choice)
-  (let ((new-val ((choice:proposer choice) (choice:val choice)))
+  (let ((new-val ((choice:proposer choice) (random-value:val (choice:random-val choice))))
         (new-choice (choice:copy choice)))
     (ptrace:add-choice! new-choice)
     new-val))
