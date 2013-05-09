@@ -59,10 +59,12 @@
 ;;;;;;;;;;;;;;;;;;
 
 (define-record-type <random-value>
-                    (%random-value:new val)
+                    (%random-value:new val forced? handled?)
                     random-value?
-                    (val random-value:val random-value:set-val!))
+                    (val random-value:val random-value:set-val!)
+                    (forced? random-value:forced? random-value:set-forced!)
+                    (handled? random-value:handled? random-value:set-handled!))
 
 (define (random-value:new)
-  (%random-value:new 'unset))
+  (%random-value:new 'unset #f #f))
 
