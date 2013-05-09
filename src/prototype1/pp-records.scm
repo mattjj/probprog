@@ -47,8 +47,8 @@
                     (random-val choice:random-val choice:set-random-val!)
                     (prior-score choice:prior-score choice:set-prior-score!))
 
-(define (choice:new proposer continuation)
-  (%choice:new proposer continuation (random-value:new) 'unset))
+(define (choice:new random-val proposer continuation)
+  (%choice:new proposer continuation random-val 'unset))
 
 (define (choice:copy choice)
   (%choice:new (choice:proposer choice) (choice:continuation choice)
@@ -59,12 +59,23 @@
 ;;;;;;;;;;;;;;;;;;
 
 (define-record-type <random-value>
-                    (%random-value:new val forced? handled?)
+                    (%random-value:new type val forced? handled?)
                     random-value?
+                    (type random-value:type)
                     (val random-value:val random-value:set-val!)
                     (forced? random-value:forced? random-value:set-forced!)
                     (handled? random-value:handled? random-value:set-handled!))
 
 (define (random-value:new)
-  (%random-value:new 'unset #f #f))
+  (%random-value:new 'unset 'unset #f #f))
 
+(define (random-value:copy rv)
+  (random-value:new (random-value:type rv)))
+
+;; TODO epoch stamp on random values, maybe user can only call new so we can
+;; hook timestamp in there
+
+;; could keep track of state in ptrace if we demanded pointers, but that forces
+;; a lot on the form of the implementation. just allow rollback.
+
+;; need to register sample obj where we set its val, right?

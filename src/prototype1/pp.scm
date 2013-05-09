@@ -32,13 +32,15 @@
 (define (sample sampler-fn loglikelihood-fn proposer-fn)
   (let ((val (call-with-current-continuation
                (lambda (k)
-                 (ptrace:add-choice! (choice:new proposer-fn k))
+                 (ptrace:add-choice! (choice:new (random-value:new) proposer-fn k))
                  (sampler-fn)))))
     (let* ((c (car (ptrace:choices *current-ptrace*)))
            (rv (choice:random-val c)))
       (random-value:set-val! rv val)
       (choice:set-prior-score! c (loglikelihood-fn val)))
-    val))
+    val)) ;; TODO return rv
+;; TODO rv could be passed out of continuation; then after we can just stuff it
+;; into the choice. the choice needs to be created with the continuation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
