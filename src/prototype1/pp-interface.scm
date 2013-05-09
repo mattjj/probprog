@@ -32,8 +32,8 @@
 
   (let ((params (gaussian:make-params mean var)))
     (sample
-      (lambda () (gaussian:rvs params))
-      (lambda (val) (gaussian:log-likelihood val params))
+      (lambda () (random-value:new 'gaussian (gaussian:rvs params)))
+      (lambda (rv) (gaussian:log-likelihood (random-value:val rv) params))
       proposer)))
 
 ;;;;;;;;;;;;;;
@@ -50,20 +50,21 @@
 ;; PROPOSALS ;;
 ;;;;;;;;;;;;;;;
 
-(define ((proposals:additive-gaussian mean var) val)
+(define ((proposals:additive-gaussian mean var) rv)
   (let* ((params (gaussian:make-params mean var))
          (nudge (gaussian:rvs params))
-         (new-val (+ val nudge))
-         (proposal-score (gaussian:log-likelihood nudge params)))
+         (proposal-score (gaussian:log-likelihood nudge params))
+         (new-val (+ (random-value:val rv) nudge))
+         (new-rv (random-value:new (random-value:type rv) new-val)))
     (set! *forward-score* proposal-score)
     (set! *backward-score* proposal-score)
-    new-val))
+    new-rv))
 
-(define ((proposals:from-prior sampler log-likelihood parameters) val)
-  (let ((new-val (sampler parameters)))
-    (let ((forward-score (log-likelihood new-val parameters))
-          (backward-score (log-likelihood val parameters)))
-      (set! *forward-score* forward-score)   ;; forward means alternative -> current
-      (set! *backward-score* backward-score) ;; backward means current -> alternative
-      new-val)))
+;; (define ((proposals:from-prior sampler log-likelihood parameters) val)
+;;   (let ((new-val (sampler parameters)))
+;;     (let ((forward-score (log-likelihood new-val parameters))
+;;           (backward-score (log-likelihood val parameters)))
+;;       (set! *forward-score* forward-score)   ;; forward means alternative -> current
+;;       (set! *backward-score* backward-score) ;; backward means current -> alternative
+;;       new-val)))
 

@@ -31,7 +31,7 @@
 (define (dumb4)
   (let ((x (gaussian 0 1))
         (y (gaussian 0 4)))
-    (emit (+ x y) 3 (likelihood:additive-gaussian 0 1))
+    (emit (rv:+ x y) 3 (likelihood:additive-gaussian 0 1))
     y))
 
 (define (dumb5)
@@ -55,7 +55,7 @@
   (let lp ((count 0) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ count (if (resume pp-thunk mh-iter-per-sample) 1 0))
+        (+ count (if (random-value:force (resume pp-thunk mh-iter-per-sample)) 1 0))
         (+ iter 1))
       (/ count nsamples-to-collect))))
 
@@ -71,7 +71,7 @@
   (let lp ((tot 0.) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ tot (resume pp-thunk mh-iter-per-sample))
+        (+ tot (random-value:force (resume pp-thunk mh-iter-per-sample)))
         (+ iter 1))
       (/ tot nsamples-to-collect))))
 

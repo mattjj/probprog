@@ -47,12 +47,11 @@
                     (random-val choice:random-val choice:set-random-val!)
                     (prior-score choice:prior-score choice:set-prior-score!))
 
-(define (choice:new random-val proposer continuation)
-  (%choice:new proposer continuation random-val 'unset))
+(define (choice:new proposer continuation)
+  (%choice:new proposer continuation 'unset 'unset))
 
 (define (choice:copy choice)
-  (%choice:new (choice:proposer choice) (choice:continuation choice)
-               (random-value:new) 'unset))
+  (choice:new (choice:proposer choice) (choice:continuation choice)))
 
 ;;;;;;;;;;;;;;;;;;
 ;; random value ;;
@@ -66,16 +65,20 @@
                     (forced? random-value:forced? random-value:set-forced!)
                     (handled? random-value:handled? random-value:set-handled!))
 
-(define (random-value:new)
-  (%random-value:new 'unset 'unset #f #f))
+(define (random-value:new type val)
+  (%random-value:new type val #f #f))
 
-(define (random-value:copy rv)
-  (random-value:new (random-value:type rv)))
+(define (random-value:force rv)
+  (if (random-value? rv)
+    (begin
+      (random-value:set-forced! rv #t)
+      (random-value:val rv))
+    rv))
+
+(define (random-value:force-set! rv val)
+  (let ((old-val (random-value:val rv)))
+    (random-value:set-forced! rv #t)
+    old-val))
 
 ;; TODO epoch stamp on random values, maybe user can only call new so we can
 ;; hook timestamp in there
-
-;; could keep track of state in ptrace if we demanded pointers, but that forces
-;; a lot on the form of the implementation. just allow rollback.
-
-;; need to register sample obj where we set its val, right?

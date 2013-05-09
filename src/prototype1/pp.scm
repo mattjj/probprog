@@ -1,8 +1,11 @@
-(declare (usual-integrations))
+(declare (usual-integrations +))
 
 (load "pp-records")
 (load "constants")
 (load "eq-properties")
+
+;; TODO TODO change
+(define rv:+ (lambda args (apply + (map random-value:val args))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Globals and initialization ;;
@@ -30,17 +33,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (sample sampler-fn loglikelihood-fn proposer-fn)
-  (let ((val (call-with-current-continuation
-               (lambda (k)
-                 (ptrace:add-choice! (choice:new (random-value:new) proposer-fn k))
-                 (sampler-fn)))))
-    (let* ((c (car (ptrace:choices *current-ptrace*)))
-           (rv (choice:random-val c)))
-      (random-value:set-val! rv val)
-      (choice:set-prior-score! c (loglikelihood-fn val)))
-    val)) ;; TODO return rv
-;; TODO rv could be passed out of continuation; then after we can just stuff it
-;; into the choice. the choice needs to be created with the continuation
+  (let ((rv (call-with-current-continuation
+              (lambda (k)
+                (ptrace:add-choice! (choice:new proposer-fn k))
+                (sampler-fn)))))
+    (let ((c (car (ptrace:choices *current-ptrace*))))
+      (choice:set-random-val! c rv)
+      (choice:set-prior-score! c (loglikelihood-fn rv)))
+    rv))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
@@ -102,10 +102,10 @@
     (within-continuation k (lambda () (propose choice)))))
 
 (define (propose choice)
-  (let ((new-val ((choice:proposer choice) (random-value:val (choice:random-val choice))))
+  (let ((new-rv ((choice:proposer choice) (choice:random-val choice)))
         (new-choice (choice:copy choice)))
     (ptrace:add-choice! new-choice)
-    new-val))
+    new-rv))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Resumable runs ;;
