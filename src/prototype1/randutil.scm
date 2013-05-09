@@ -13,7 +13,7 @@
 ;; packaging parameters is convenient
 
 (define (gaussian:make-params mean var)
-  (make-flo-vector (cons mean var)))
+  (flo:vector mean var))
 (define (gaussian:mean params)
   (flo:vector-ref params 0))
 (define (gaussian:var params)
@@ -52,7 +52,7 @@
   (let ((tot #f))
     (if (not (default-object? weights))
       (begin
-        (set! weights (make-flo-vector weights))
+        (set! weights (list->flo-vector weights))
         (set! tot (flo:vector-sum weights))))
     `#(,(list->vector items) ,weights ,tot)))
 

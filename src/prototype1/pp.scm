@@ -136,12 +136,6 @@
         (ptrace:emit-continuation (eq-get thunk 'last-ptrace))
         (lambda () (set! *niter-left* niter) (set! *top-level* k) #!unspecific)))))
 
-(define (stream-head-fold-left proc initial stream k)
-  (if (= k 0)
-    initial
-    (stream-head-fold-left proc (proc (stream-car stream) initial)
-                            (stream-cdr stream) (- k 1))))
-
 (define (sample-stream pthunk burnin-iter mh-iter)
   (run pthunk burnin-iter)
   (define (sample-stream-helper)

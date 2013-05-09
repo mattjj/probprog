@@ -47,19 +47,6 @@
 ;; instead of an eq hash table keyed on the thunk, just make a running thunk
 ;; data structure? or capture the hash table?
 
-(define (stream-head-fold-left proc initial stream k)
-  (if (= k 0)
-    initial
-    (stream-head-fold-left proc (proc (stream-car stream) initial)
-                            (stream-cdr stream) (- k 1))))
-
-(define (sample-stream pthunk burnin-iter mh-iter)
-  (run pthunk burnin-iter)
-  (define (sample-stream-helper)
-    (cons-stream (resume pthunk mh-iter)
-                 (sample-stream-helper)))
-  (sample-stream-helper))
-
 
 (define (estimate-mean pp-thunk nsamples-to-collect
                        #!optional mh-iter-per-sample burn-in)
