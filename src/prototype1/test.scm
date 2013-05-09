@@ -43,19 +43,13 @@
 ;; Utilities for gathering statistics ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (estimate-mean pp-thunk nsamples-to-collect
+(define (estimate-mean pthunk nsamples-to-collect
                        #!optional mh-iter-per-sample burn-in)
   (if (default-object? mh-iter-per-sample)
     (set! mh-iter-per-sample 10))
   (if (default-object? burn-in)
     (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 5))))
 
-  (run pp-thunk burn-in)
-
-  (let lp ((tot 0.) (iter 0))
-    (if (< iter nsamples-to-collect)
-      (lp
-        (+ tot (resume pp-thunk mh-iter-per-sample))
-        (+ iter 1))
-      (/ tot nsamples-to-collect))))
+  (let ((x (sample-stream pthunk burn-in mh-iter-per-sample)))
+    (/ (stream-head-fold-left + 0 x nsamples-to-collect) nsamples-to-collect)))
 
