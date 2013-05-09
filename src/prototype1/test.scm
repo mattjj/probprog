@@ -43,11 +43,6 @@
 ;; Utilities for gathering statistics ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; instead of these running functions, stream of samples
-;; instead of an eq hash table keyed on the thunk, just make a running thunk
-;; data structure? or capture the hash table?
-
-
 (define (estimate-mean pp-thunk nsamples-to-collect
                        #!optional mh-iter-per-sample burn-in)
   (if (default-object? mh-iter-per-sample)
