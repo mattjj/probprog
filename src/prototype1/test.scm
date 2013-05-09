@@ -43,6 +43,18 @@
 ;; Utilities for gathering statistics ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; instead of these running functions, stream of samples
+;; instead of an eq hash table keyed on the thunk, just make a running thunk
+;; data structure? or capture the hash table?
+
+(define (sample-stream pthunk num-burn-in-iter num-mh-iter-between-samples)
+  (run pthunk num-burn-in-iter)
+  (define (sample-stream-helper)
+    (cons-stream (resume pthunk num-mh-iter-between-samples)
+                 (sample-stream-helper)))
+  (sample-stream-helper))
+
+
 (define (estimate-indicator-probability pp-thunk nsamples-to-collect
                                         #!optional mh-iter-per-sample burn-in)
   (if (default-object? mh-iter-per-sample)
@@ -55,7 +67,7 @@
   (let lp ((count 0) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ count (if (random-value:force (resume pp-thunk mh-iter-per-sample)) 1 0))
+        (+ count (if (resume pp-thunk mh-iter-per-sample) 1 0))
         (+ iter 1))
       (/ count nsamples-to-collect))))
 
@@ -71,7 +83,7 @@
   (let lp ((tot 0.) (iter 0))
     (if (< iter nsamples-to-collect)
       (lp
-        (+ tot (random-value:force (resume pp-thunk mh-iter-per-sample)))
+        (+ tot (resume pp-thunk mh-iter-per-sample))
         (+ iter 1))
       (/ tot nsamples-to-collect))))
 
