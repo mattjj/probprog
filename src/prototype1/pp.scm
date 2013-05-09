@@ -137,9 +137,11 @@
         (lambda () (set! *niter-left* niter) (set! *top-level* k) #!unspecific)))))
 
 (define (sample-stream pthunk burnin-iter mh-iter)
-  (run pthunk burnin-iter)
-  (define (sample-stream-helper)
-    (cons-stream (resume pthunk mh-iter)
-                 (sample-stream-helper)))
-  (sample-stream-helper))
+  (let ((my-table (make-eq-hash-table)))
+    (fluid-let ((eq-properties my-table))
+      (run pthunk burnin-iter))
+    (define (sample-stream-helper)
+      (cons-stream (fluid-let ((eq-properties my-table)) (resume pthunk mh-iter))
+                   (sample-stream-helper)))
+    (sample-stream-helper)))
 
