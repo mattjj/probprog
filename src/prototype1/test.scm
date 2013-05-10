@@ -39,17 +39,3 @@
     (emit (gaussian (* 2 label) 1) 2 (likelihood:additive-gaussian 0 0.2))
     label))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Utilities for gathering statistics ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (estimate-mean pthunk nsamples-to-collect
-                       #!optional mh-iter-per-sample burn-in)
-  (if (default-object? mh-iter-per-sample)
-    (set! mh-iter-per-sample 10))
-  (if (default-object? burn-in)
-    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 5))))
-
-  (let ((x (sample-stream pthunk burn-in mh-iter-per-sample)))
-    (/ (stream-head-fold-left + 0 x nsamples-to-collect) nsamples-to-collect)))
-

@@ -136,6 +136,10 @@
         (ptrace:emit-continuation (eq-get thunk 'last-ptrace))
         (lambda () (set! *niter-left* niter) (set! *top-level* k) #!unspecific)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utilities for gathering statistics ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (sample-stream pthunk burnin-iter mh-iter)
   (let ((my-table (make-eq-hash-table)))
     (fluid-let ((eq-properties my-table))
@@ -144,4 +148,14 @@
       (cons-stream (fluid-let ((eq-properties my-table)) (resume pthunk mh-iter))
                    (sample-stream-helper)))
     (sample-stream-helper)))
+
+(define (estimate-mean pthunk nsamples-to-collect
+                       #!optional mh-iter-per-sample burn-in)
+  (if (default-object? mh-iter-per-sample)
+    (set! mh-iter-per-sample 10))
+  (if (default-object? burn-in)
+    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 5))))
+
+  (let ((x (sample-stream pthunk burn-in mh-iter-per-sample)))
+    (/ (stream-head-fold-left + 0 x nsamples-to-collect) nsamples-to-collect)))
 
