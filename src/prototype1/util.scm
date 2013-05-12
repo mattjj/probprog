@@ -4,6 +4,23 @@
 ;; general ;;
 ;;;;;;;;;;;;;
 
+(define (list-refs lst ks)
+  (let* ((ks (sort ks fix:<))
+         (num (length ks))
+         (result (make-vector num)))
+    (let lp ((list-index 0)
+             (result-index 0)
+             (lst lst)
+             (ks ks))
+      (if (null? ks)
+        result
+        (if (fix:= list-index (car ks))
+          (begin (vector-set! result result-index (car lst))
+                 (lp (fix:+ list-index 1) (fix:+ result-index 1)
+                     (cdr lst) (cdr ks)))
+          (lp (fix:+ list-index 1) result-index
+              (cdr lst) ks))))))
+
 (define ((g:sigma op id) f low high)
   (if (fix:> low high)
     id

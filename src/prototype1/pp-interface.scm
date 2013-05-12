@@ -1,7 +1,4 @@
 (declare (usual-integrations))
-
-;; this file contains the interface functions users can call
-
 (load "randutil")
 
 ;;;;;;;;;;;;;;
@@ -9,32 +6,10 @@
 ;;;;;;;;;;;;;;
 
 ;; discrete
-
-(define (discrete items #!optional weights proposer)
-  (if (and (default-object? proposer)
-           (not (default-object? weights))
-           (procedure? weights))
-    (let ((real-proposer weights))
-      (set! weights proposer)
-      (set! proposer real-proposer)))
-
-  (let ((params (discrete:make-params items weights)))
-    (sample
-      (lambda () (discrete:rvs params))
-      (lambda (val) (discrete:log-likelihood val params))
-      proposer)))
+(load "distributions/categorical")
 
 ;; continuous
-
-(define (gaussian mean var #!optional proposer)
-  (if (default-object? proposer)
-    (set! proposer (proposals:additive-gaussian 0 (/ var 4))))
-
-  (let ((params (gaussian:make-params mean var)))
-    (sample
-      (lambda () (random-value:new 'gaussian (gaussian:rvs params)))
-      (lambda (rv) (gaussian:log-likelihood (random-value:val rv) params))
-      proposer)))
+(load "distributions/gaussian")
 
 ;;;;;;;;;;;;;;
 ;; EMITTING ;;

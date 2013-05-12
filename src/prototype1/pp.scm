@@ -4,7 +4,12 @@
 (load "constants")
 (load "eq-properties")
 
-;; TODO TODO change
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Random value operators ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO write as generic overloads
+
 (define rv:+ (lambda args (apply + (map random-value:val args))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
