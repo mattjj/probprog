@@ -6,10 +6,10 @@
 ;;;;;;;;;;;;;;
 
 ;; discrete
-(load "distributions/categorical")
+(load "categorical")
 
 ;; continuous
-(load "distributions/gaussian")
+(load "gaussian")
 
 ;;;;;;;;;;;;;;
 ;; EMITTING ;;
