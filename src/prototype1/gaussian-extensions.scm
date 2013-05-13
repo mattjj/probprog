@@ -55,7 +55,8 @@
 
 ;; internals
 
-;; TODO needs to be captured in a dynamic context. macro?
+;; TODO needs to be captured in a dynamic context. macro? maybe just list of
+;; pairs that another macro handles
 (define *cov-factor* (make-vector 16))
 (define *means* (make-vector 16))
 (define *num-gaussians* 0)
@@ -128,12 +129,17 @@
   (gaussian-builder:construct-joint-sample!))
 
 ;; TODO register this function against type tag
-(define (gaussian:marginal-likelihood rv)
-  10) ;; TODO
+(define (gaussian:marginal-likelihood rv val)
+  (if (not *post-indices*)
+    (gaussian-builder:set-up-posterior-funcs!))
+  (gaussian-builder:marginal-likelihood rv val))
 
 ;; internals
 
 (define (gaussian-builder:construct-joint-sample!)
+  (error "must be called after gaussian:construct-joint-sample!"))
+
+(define (gaussian-builder:marginal-likelihood rv val)
   (error "must be called after gaussian:construct-joint-sample!"))
 
 (define ((gaussian-builder:get-conditioning-blocks) func)
@@ -175,15 +181,12 @@
               (cond-obs (apply col-matrix (map random-value:force (map car sampled)))))
           (func sources-factor sources-mean cond-factor cond-mean cond-obs derived-factor derived-mean)))))))
 
-;; TODO only do this calculation if it's not already done; otherwise it should
-;; leave around enough to do the operations without re-calculation
 (define (gaussian-builder:set-up-posterior-funcs!)
   ((gaussian-builder:get-conditioning-blocks)
      (lambda (sources-factor sources-mean cond-factor cond-mean cond-obs derived-factor derived-mean)
        (let* ((C cond-factor)
               (CT (m:transpose C))
               (CCT (matrix*matrix cond-factor CT))
-              ;; TODO put computation in funcs, just set things to false here
               (post-innovations-mean (if (fix:> (m:num-rows cond-obs) 0)
                                        (matrix*matrix
                                          CT
@@ -203,6 +206,36 @@
                                 (lambda (idx) (matrix-ref post-means idx 0))
                                 (lambda () (error "invalid argument to gaussian:posterior-mean")))))
 
+         ;; TODO TODO test
+         (set! gaussian-builder:marginal-likelihood
+           (let ((saved-innovations-cov #f))
+             (lambda (rv val)
+               (if (random-value:forced? rv)
+                 (error "can't call marginal likelihood on a forced value"))
+               (let ((innovations-cov (cond (saved-innovations-cov saved-innovations-cov)
+                                             ((fix:= (m:num-rows cond-obs) 0) (m:eye (m:num-cols C)))
+                                             (else (matrix-matrix (m:eye (m:num-cols C))
+                                                                  (matrix*matrix CT (solve-psd CCT C))))))
+                     (factor)
+                     (mean)
+                     (index))
+                 (if (memq rv *sources-list*)
+                   (begin (set! factor sources-factor)
+                          (set! index (hash-table/get *post-indices* rv #f))
+                          (set! mean post-sources-mean))
+                   (begin (set! factor derived-factor)
+                          (set! index (fix:- (hash-table/get *post-indices* rv #f)
+                                                                    (fix:+ (m:num-rows sources-factor)
+                                                                           (m:num-rows cond-factor))))
+                          (set! mean post-derived-mean)))
+                 (let* ((row (matrix-row factor index))
+                        (mean (matrix-ref mean index 0))
+                        (var (matrix-ref (matrix*matrix row
+                                                        (matrix*matrix innovations-cov (m:transpose row)))
+                                         0 0)))
+                   (set! saved-innovations-cov innovations-cov)
+                   (gaussian:log-likelihood val (gaussian:make-params mean var)))))))
+
          (set! gaussian-builder:construct-joint-sample!
            (let ((saved-chol #f))
              (lambda ()
@@ -219,8 +252,8 @@
                       (full-sample (m:vstack sources-sample cond-obs derived-sample)))
                  (set! saved-chol chol)
                  (hash-table/for-each *post-indices* (lambda (rv i)
-                                                       (random-value:set-val! rv (matrix-ref full-sample i 0))
-                                                       (random-value:set-handled! rv #t)))
+                                                       (random-value:set-val! rv
+                                                                              (matrix-ref full-sample i 0))))
                  ))))
          ))))
 
@@ -229,6 +262,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO
+
+
+
 
 
 

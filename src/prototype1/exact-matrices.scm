@@ -41,6 +41,9 @@
                               (proc (flatidx->rowidx flatidx nrows ncols)
                                     (flatidx->colidx flatidx nrows ncols))))))
 
+(define (matrix-row m i)
+  (m:generate 1 (m:num-cols m) (lambda (_ j) (matrix-ref m i j))))
+
 (define (m:for-each proc m)
   (let ((nrows (m:num-rows m))
         (ncols (m:num-cols m)))
