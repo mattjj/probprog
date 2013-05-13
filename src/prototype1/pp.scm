@@ -54,22 +54,22 @@
 ;; Emit and MH over traces ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 
-;; (define (emit2 var observed-value #!optional likelihood-function)
-;;   (if (default-object? likelihood-function)
-;;     (set! likelihood-function likelihood:exact))
-
-;;   (for-each (lambda (marker) (marker)) *joint-handlable-markers*)
-;;   (cond ((or (every (lambda (choice) (random-value:handled? (choice:random-val choice)))
-;;                     (ptrace:choices *current-ptrace*))
-;;              (fix:= *niter-left* 0))
-;;          (begin
-;;            (random-value:force-set! var observed-value)
-;;            (for-each (lambda (joint-sampler) (joint-sampler)) *joint-samplers*)
-;;            (if (not *top-level*) (reset))))
-;;         ((and (eq? likelihood-function likelihood:exact)
-;;               (random-value:handled? var))
-;;          (error "NotImplementedError"))
-;;         (else (error "NotImplementedError"))))
+(define (emit2 var observed-value #!optional likelihood-function)
+  (if (default-object? likelihood-function)
+    (set! likelihood-function likelihood:exact))
+  (for-each (lambda (marker) (marker)) *joint-handlable-markers*)
+  ;; TODO fix logic
+  (cond ((or (every (lambda (choice) (random-value:handled? (choice:random-val choice)))
+                    (ptrace:choices *current-ptrace*))
+             (fix:= *niter-left* 0))
+         (begin
+           (random-value:force-set! var observed-value)
+           (for-each (lambda (joint-sampler) (joint-sampler)) *joint-samplers*)
+           (if (not *top-level*) (reset))))
+        ((and (eq? likelihood-function likelihood:exact)
+              (random-value:handled? var))
+         (error "NotImplementedError"))
+        (else (error "NotImplementedError"))))
 
 (define (emit var observed-value #!optional likelihood-function)
   (if (default-object? likelihood-function)
