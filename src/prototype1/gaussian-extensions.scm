@@ -2,7 +2,6 @@
 (load "util")
 (load "randutil")
 (load "exact-matrices")
-(load "pp-records")
 
 (define (gaussian-rv? rv)
   (and (random-value? rv)
@@ -122,11 +121,15 @@
 
 ;; interface for MH controller
 
-;; TODO register this function against type tag
+(define (gaussian:mark-handlable)
+  (hash-table/for-each *indices* (lambda (rv idx) (random-value:set-handled! rv #t))))
+(set! *joint-handlable-markers* (cons gaussian:mark-handlable *joint-handlable-markers*))
+
 (define (gaussian:construct-joint-sample!)
   (if (not *post-indices*)
     (gaussian-builder:set-up-posterior-funcs!))
   (gaussian-builder:construct-joint-sample!))
+(set! *joint-samplers* (cons gaussian:construct-joint-sample! *joint-samplers*))
 
 ;; TODO register this function against type tag
 (define (gaussian:marginal-likelihood rv val)
@@ -270,9 +273,9 @@
 
 ;; TESTING TODO REMOVE
 
-(define x (gaussian 0 1))
-(define y (gaussian 0 4))
-;; (define e (gaussian 0 1))
-(define z (gaussian:+ x y))
-(random-value:force-set! z 3)
+;; (define x (gaussian 0 1))
+;; (define y (gaussian 0 4))
+;; ;; (define e (gaussian 0 1))
+;; (define z (gaussian:+ x y))
+;; (random-value:force-set! z 3)
 

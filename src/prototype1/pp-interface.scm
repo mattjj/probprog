@@ -2,16 +2,6 @@
 (load "randutil")
 
 ;;;;;;;;;;;;;;
-;; SAMPLING ;;
-;;;;;;;;;;;;;;
-
-;; discrete
-(load "categorical")
-
-;; continuous
-(load "gaussian")
-
-;;;;;;;;;;;;;;
 ;; EMITTING ;;
 ;;;;;;;;;;;;;;
 

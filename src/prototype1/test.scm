@@ -2,6 +2,8 @@
 
 (load "pp")
 (load "pp-interface")
+;; (load "gaussian")
+(load "gaussian-extensions")
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)
@@ -35,7 +37,8 @@
     y))
 
 (define (dumb5)
-  (let ((label (pramb 0 1)))
-    (emit (gaussian (* 2 label) 1) 2 (likelihood:additive-gaussian 0 0.2))
-    label))
+  (let ((x (gaussian 0 1))
+        (y (gaussian 0 4)))
+    (emit2 (gaussian:+ x y) 3)
+    (gaussian:posterior-mean y)))
 

@@ -27,6 +27,9 @@
 (define *top-level* #f) ;; should only be rebound dynamically (i.e. should stay #f in global scope)
 (define *niter-done* 0) ;; only interesting when resuming runs
 
+(define *joint-handlable-markers* '())
+(define *joint-samplers* '())
+
 (define (reset)
   (set! *niter-left* DEFAULT-MH-STEPS)
   (set! *current-ptrace* (ptrace:new '()))
@@ -51,10 +54,26 @@
 ;; Emit and MH over traces ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 
-(define (emit var observed-value #!optional likelihood-function)
+(define (emit2 var observed-value #!optional likelihood-function)
   (if (default-object? likelihood-function)
     (set! likelihood-function likelihood:exact))
 
+  (for-each (lambda (marker) (marker)) *joint-handlable-markers*)
+  (cond ((or (every (lambda (choice) (random-value:handled? (choice:random-val choice)))
+                 (ptrace:choices *current-ptrace*))
+             (fix:= *niter-left* 0))
+         (begin
+           (random-value:force-set! var observed-value)
+           (for-each (lambda (joint-sampler) (joint-sampler)) *joint-samplers*)
+           (if (not *top-level*) (reset))))
+        ((and (eq? likelihood-function likelihood:exact)
+              (random-value:handled? var))
+         (error "NotImplementedError"))
+        (else (error "NotImplementedError"))))
+
+(define (emit var observed-value #!optional likelihood-function)
+  (if (default-object? likelihood-function)
+    (set! likelihood-function likelihood:exact))
   (ptrace:set-likelihood-score! *current-ptrace* (likelihood-function var observed-value))
   (call-with-current-continuation
     (lambda (k)
