@@ -38,7 +38,8 @@
 
 (define (dumb5)
   (let ((x (gaussian 0 1))
-        (y (gaussian 0 4)))
-    (emit2 (gaussian:+ x y) 3)
+        (y (gaussian 0 4))
+        (e (gaussian 0 1)))
+    (emit2 (gaussian:+ x y e) 3)
     (gaussian:posterior-mean y)))
 
