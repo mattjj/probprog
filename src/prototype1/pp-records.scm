@@ -78,6 +78,7 @@
 (define (random-value:force-set! rv val)
   (let ((old-val (random-value:val rv)))
     (random-value:set-forced! rv #t)
+    (random-value:set-val! rv val)
     old-val))
 
 ;; TODO epoch stamp on random values, maybe user can only call new so we can

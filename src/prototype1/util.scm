@@ -4,22 +4,34 @@
 ;; general ;;
 ;;;;;;;;;;;;;
 
+(define (vector-for-each proc vec)
+  (let ((len (vector-length vec)))
+    (let lp ((i 0))
+      (if (fix:< i len)
+        (begin
+          (proc (vector-ref vec i))
+          (lp (fix:+ i 1)))))))
+
+(define (vector-refs vec ks)
+  (vector-map (lambda (k) (vector-ref vec k)) (list->vector ks)))
+
 (define (list-refs lst ks)
-  (let* ((ks (sort ks fix:<))
-         (num (length ks))
+  ;; this procedure is complicated because we only want to traverse lst once
+  (let* ((num (length ks))
+         (kvec (list->vector ks))
+         (kindices (sort! (make-initialized-vector num (lambda (i) i))
+                          (lambda (i j) (fix:< (vector-ref kvec i) (vector-ref kvec j)))))
+         (kvec (sort! kvec fix:<))
          (result (make-vector num)))
     (let lp ((list-index 0)
              (result-index 0)
-             (lst lst)
-             (ks ks))
-      (if (null? ks)
+             (lst lst))
+      (if (fix:= result-index num)
         result
-        (if (fix:= list-index (car ks))
-          (begin (vector-set! result result-index (car lst))
-                 (lp (fix:+ list-index 1) (fix:+ result-index 1)
-                     (cdr lst) (cdr ks)))
-          (lp (fix:+ list-index 1) result-index
-              (cdr lst) ks))))))
+        (if (fix:= list-index (vector-ref kvec result-index))
+          (begin (vector-set! result (vector-ref kindices result-index) (car lst))
+                 (lp (fix:+ list-index 1) (fix:+ result-index 1) (cdr lst)))
+          (lp (fix:+ list-index 1) result-index (cdr lst)))))))
 
 (define ((g:sigma op id) f low high)
   (if (fix:> low high)
@@ -30,6 +42,9 @@
         (lp (fix:+ i 1) (op sum (f i)))))))
 
 (define sigma (g:sigma + 0))
+
+(define (vector-sum v)
+  (sigma (lambda (idx) (vector-ref v idx)) 0 (fix:- (vector-length v) 1)))
 
 ;;;;;;;;;;;;;;;;;
 ;; float stuff ;;
