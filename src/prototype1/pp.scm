@@ -32,7 +32,7 @@
 
 (define (reset)
   (set! *niter-left* DEFAULT-MH-STEPS)
-  (set! *current-ptrace* (ptrace:new '()))
+  (set! *current-ptrace* (ptrace:new))
   (set! *alternative-ptrace* #f))
 (reset)
 
@@ -87,7 +87,7 @@
 
 (define (MH-sample-ptrace)
   (if (not *alternative-ptrace*)
-    (begin (set! *alternative-ptrace* (ptrace:new '())) *current-ptrace*)
+    (begin (set! *alternative-ptrace* (ptrace:new)) *current-ptrace*)
     (let ((forward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *alternative-ptrace*)))))
           (backward-choice-prob (flo:negate (flo:log (exact->inexact (ptrace:length *current-ptrace*)))))
           (current-prior (prior-score *current-ptrace*))
@@ -138,7 +138,7 @@
 (define (run thunk niter)
   (fluid-let ((*niter-left* niter)
               (*niter-done* 0)
-              (*current-ptrace* (ptrace:new '()))
+              (*current-ptrace* (ptrace:new))
               (*alternative-ptrace* #f)
               (*backward-score* #f)
               (*forward-score* #f)

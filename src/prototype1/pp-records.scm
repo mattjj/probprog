@@ -16,8 +16,8 @@
   (ptrace:set-likelihood-score! pt1 (ptrace:likelihood-score pt2))
   (ptrace:set-emit-continuation! pt1 (ptrace:emit-continuation pt2)))
 
-(define (ptrace:new choices)
-  (%ptrace:new choices #f #f))
+(define (ptrace:new)
+  (%ptrace:new '() #f #f))
 
 (define (ptrace:length ptrace)
   (length (ptrace:choices ptrace)))

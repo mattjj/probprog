@@ -2,8 +2,8 @@
 
 (load "pp")
 (load "pp-interface")
-;; (load "gaussian")
-(load "gaussian-extensions")
+(load "gaussian")
+;; (load "gaussian-extensions")
 
 ;; try running with
 ;; (estimate-indicator-probability dumb2 100)
