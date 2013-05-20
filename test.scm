@@ -2,7 +2,7 @@
 
 (load "pp")
 (load "pp-interface")
-(load "gaussian")
+(load "rvs")
 
 (define (test1)
   (let ((x (discrete '(0 1)))
