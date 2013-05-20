@@ -4,14 +4,6 @@
 (load "constants")
 (load "eq-properties")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Random value operators ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; TODO write as generic overloads
-
-(define rv:+ (lambda args (apply + (map random-value:val args))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Globals and initialization ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,23 +45,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
 ;; Emit and MH over traces ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;:
-
-(define (emit2 var observed-value #!optional likelihood-function)
-  (if (default-object? likelihood-function)
-    (set! likelihood-function likelihood:exact))
-  (for-each (lambda (marker) (marker)) *joint-handlable-markers*)
-  ;; TODO fix logic
-  (cond ((or (every (lambda (choice) (random-value:handled? (choice:random-val choice)))
-                    (ptrace:choices *current-ptrace*))
-             (fix:= *niter-left* 0))
-         (begin
-           (random-value:force-set! var observed-value)
-           (for-each (lambda (joint-sampler) (joint-sampler)) *joint-samplers*)
-           (if (not *top-level*) (reset))))
-        ((and (eq? likelihood-function likelihood:exact)
-              (random-value:handled? var))
-         (error "NotImplementedError"))
-        (else (error "NotImplementedError"))))
 
 (define (emit var observed-value #!optional likelihood-function)
   (if (default-object? likelihood-function)
@@ -151,7 +126,7 @@
                             (let ((val (thunk)))
                               (eq-put! thunk 'last-ptrace *current-ptrace*)
                               (eq-put! thunk 'total-iterations *niter-done*)
-                              (*top-level* (random-value:force val))))))))
+                              (*top-level* val)))))))
 
 (define (resume thunk niter)
   (call-with-current-continuation
@@ -177,6 +152,6 @@
   (/ (stream-head-fold-left + 0 sample-stream nsamples) nsamples))
 
 (define (estimate-variance sample-stream nsamples)
-  (- (/ (sample-stream-fold-left + 0 (stream-map square sample-stream) nsamples) nsamples)
+  (- (/ (stream-head-fold-left + 0 (stream-map square sample-stream) nsamples) nsamples)
      (square (estimate-mean sample-stream nsamples))))
 

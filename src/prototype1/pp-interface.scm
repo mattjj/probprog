@@ -19,11 +19,10 @@
   (let* ((params (gaussian:make-params mean var))
          (nudge (gaussian:rvs params))
          (proposal-score (gaussian:log-likelihood nudge params))
-         (new-val (+ (random-value:val rv) nudge))
-         (new-rv (random-value:new (random-value:type rv) new-val)))
+         (new-val (+ rv nudge)))
     (set! *forward-score* proposal-score)
     (set! *backward-score* proposal-score)
-    new-rv))
+    new-val))
 
 ;; (define ((proposals:from-prior sampler log-likelihood parameters) val)
 ;;   (let ((new-val (sampler parameters)))

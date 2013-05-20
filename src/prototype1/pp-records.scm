@@ -53,33 +53,5 @@
 (define (choice:copy choice)
   (choice:new (choice:proposer choice) (choice:continuation choice)))
 
-;;;;;;;;;;;;;;;;;;
-;; random value ;;
-;;;;;;;;;;;;;;;;;;
-
-(define-record-type <random-value>
-                    (%random-value:new type val forced? handled?)
-                    random-value?
-                    (type random-value:type)
-                    (val random-value:val random-value:set-val!)
-                    (forced? random-value:forced? random-value:set-forced!)
-                    (handled? random-value:handled? random-value:set-handled!))
-
-(define (random-value:new type val)
-  (%random-value:new type val #f #f))
-
-(define (random-value:force rv)
-  (if (random-value? rv)
-    (begin
-      (random-value:set-forced! rv #t)
-      (random-value:val rv))
-    rv))
-
-(define (random-value:force-set! rv val)
-  (let ((old-val (random-value:val rv)))
-    (random-value:set-forced! rv #t)
-    (random-value:set-val! rv val)
-    old-val))
-
 ;; TODO epoch stamp on random values, maybe user can only call new so we can
 ;; hook timestamp in there

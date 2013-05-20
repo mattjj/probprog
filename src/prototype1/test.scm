@@ -33,9 +33,10 @@
 (define (dumb4)
   (let ((x (gaussian 0 1))
         (y (gaussian 0 4)))
-    (emit (rv:+ x y) 3 (likelihood:additive-gaussian 0 1))
+    (emit (+ x y) 3 (likelihood:additive-gaussian 0 1))
     y))
 
+;; this is part of the new stuff!
 (define (dumb5)
   (let ((x (gaussian 0 1))
         (y (gaussian 0 4))

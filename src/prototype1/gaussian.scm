@@ -7,7 +7,7 @@
 
   (let ((params (gaussian:make-params mean var)))
     (sample
-      (lambda () (random-value:new 'gaussian (gaussian:rvs params)))
-      (lambda (rv) (gaussian:log-likelihood (random-value:val rv) params))
+      (lambda () (gaussian:rvs params))
+      (lambda (rv) (gaussian:log-likelihood rv params))
       proposer)))
 
