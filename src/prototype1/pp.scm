@@ -152,6 +152,6 @@
   (/ (stream-head-fold-left + 0 sample-stream nsamples) nsamples))
 
 (define (estimate-variance sample-stream nsamples)
-  (- (/ (stream-head-fold-left + 0 (stream-map square sample-stream) nsamples) nsamples)
+  (- (estimate-mean (stream-map square sample-stream) nsamples)
      (square (estimate-mean sample-stream nsamples))))
 
