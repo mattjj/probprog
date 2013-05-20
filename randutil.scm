@@ -42,9 +42,9 @@
     (flo:- (flo:/ (flo:* centered centered) (flo:* -2. var))
            (flo:/ (flo:log (flo:* (flo:* 2. pi) var)) 2.))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Discrete/categorical ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;
+;; Discrete ;;
+;;;;;;;;;;;;;;
 
 ;; packaging parameters is convenient
 

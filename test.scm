@@ -1,8 +1,6 @@
 (declare (usual-integrations))
 
-(load "pp")
-(load "pp-interface")
-(load "rvs")
+(load "load")
 
 (define (test1)
   (let ((x (discrete '(0 1)))
@@ -12,7 +10,7 @@
       (emit (or (= sum 0)
                 (= sum 2))
             #t)
-      (= sum 0))))
+      (list x y z))))
 
 (define (test2)
   (let ((x (gaussian 0 1)))

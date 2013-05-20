@@ -20,9 +20,9 @@
       (set! weights proposer)
       (set! proposer real-proposer)))
 
-  (let ((params (categorical:make-params items weights)))
+  (let ((params (discrete:make-params items weights)))
     (sample
-      (lambda () (categorical:rvs params))
-      (lambda (val) (categorical:log-likelihood val params))
+      (lambda () (discrete:rvs params))
+      (lambda (val) (discrete:log-likelihood val params))
       proposer)))
 
