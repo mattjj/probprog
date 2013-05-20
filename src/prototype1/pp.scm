@@ -173,13 +173,10 @@
                    (sample-stream-helper)))
     (sample-stream-helper)))
 
-(define (estimate-mean pthunk nsamples-to-collect
-                       #!optional mh-iter-per-sample burn-in)
-  (if (default-object? mh-iter-per-sample)
-    (set! mh-iter-per-sample 10))
-  (if (default-object? burn-in)
-    (set! burn-in (floor (/ (* nsamples-to-collect mh-iter-per-sample) 5))))
+(define (estimate-mean sample-stream nsamples)
+  (/ (stream-head-fold-left + 0 sample-stream nsamples) nsamples))
 
-  (let ((x (sample-stream pthunk burn-in mh-iter-per-sample)))
-    (/ (stream-head-fold-left + 0 x nsamples-to-collect) nsamples-to-collect)))
+(define (estimate-variance sample-stream nsamples)
+  (- (/ (sample-stream-fold-left + 0 (stream-map square sample-stream) nsamples) nsamples)
+     (square (estimate-mean sample-stream nsamples))))
 
