@@ -21,8 +21,10 @@
       (set! proposer real-proposer)))
 
   (let ((params (discrete:make-params items weights)))
-    (sample
-      (lambda () (discrete:rvs params))
-      (lambda (val) (discrete:log-likelihood val params))
-      proposer)))
+    (let ((sampler (lambda () (discrete:rvs params)))
+          (likelihood (lambda (val) (discrete:log-likelihood val params))))
+      (if (default-object? proposer)
+        (set! proposer (proposals:from-prior sampler likelihood)))
+
+    (sample sampler likelihood proposer))))
 
